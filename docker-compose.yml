@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: vaultflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vaultflow
+      POSTGRES_PASSWORD: vaultflow_dev_password
+      POSTGRES_DB: vaultflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - vaultflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaultflow -d vaultflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  vaultflow_pgdata:
