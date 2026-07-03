@@ -24,3 +24,16 @@ class SecretVerifyRequest(BaseModel):
 class SecretVerifyResponse(BaseModel):
     valid: bool
     status: str
+
+
+class QueryRequest(BaseModel):
+    question: str
+
+
+class QueryResponse(BaseModel):
+    intent: dict
+    result: dict
+
+class SummaryResponse(BaseModel):
+    summary: str
+
