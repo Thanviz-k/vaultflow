@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey,LargeBinary, true
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
@@ -15,9 +15,9 @@ class Secret(Base):
     key_hash = Column(String, nullable=False)
     status = Column(String, nullable=False, default="active")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    expires_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
     last_accessed_at = Column(DateTime(timezone=True), nullable=True)
-
+    encrypted_value = Column(LargeBinary,nullable=True,)
     owner = relationship("Owner", back_populates="secrets")
 
     audit_logs = relationship("AuditLog", back_populates="secret")
