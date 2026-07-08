@@ -1,3 +1,6 @@
+
+import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
@@ -5,8 +8,13 @@ from pwdlib import PasswordHash
 
 
 password_hash = PasswordHash.recommended()
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-SECRET_KEY = "change-this-to-a-long-random-secret-key"
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is not set"
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
