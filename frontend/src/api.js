@@ -16,18 +16,31 @@ async function parseResponse(response) {
 
 // REGISTER
 
-export async function createOwner(name, email, password) {
-  const response = await fetch(`${BASE_URL}/owners/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name,
-      email,
-      password,
-    }),
-  });
+export async function createOwner(
+  name,
+  email,
+  password,
+  useCustomPassphrase,
+  customPassphrase,
+) {
+  const response = await fetch(
+    `${BASE_URL}/owners/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        use_custom_passphrase:
+          useCustomPassphrase,
+        custom_passphrase:
+          customPassphrase,
+      }),
+    }
+  );
 
   return parseResponse(response);
 }
@@ -51,7 +64,14 @@ export async function loginOwner(email, password) {
 
 // CREATE SECRET
 
-export async function createSecret(name, value, expiresInDays, token) {
+export async function createSecret(
+  name,
+  value,
+  clientHalf,
+  expiresInDays,
+  token
+) {
+  console.log("Token:", token);
   const response = await fetch(`${BASE_URL}/secrets/`, {
     method: "POST",
     headers: {
@@ -61,6 +81,7 @@ export async function createSecret(name, value, expiresInDays, token) {
     body: JSON.stringify({
       name,
       value,
+      client_half: clientHalf,
       expires_in_days: expiresInDays,
     }),
   });
@@ -80,6 +101,29 @@ export async function getMySecrets(token) {
 
   return parseResponse(response);
 }
+export async function updateSecret(
+  secretId,
+  name,
+  value,
+  expiresInDays,
+  token
+) {
+  const response = await fetch(`${BASE_URL}/secrets/${secretId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name,
+      value,
+      expires_in_days: expiresInDays,
+    }),
+  });
+
+  return parseResponse(response);
+}
+
 
 // REVOKE SECRET
 // Your current backend revoke route is not protected yet.
@@ -145,4 +189,50 @@ export async function revealSecret(secretId, clientHalf, token) {
   });
 
   return parseResponse(response);
+}
+// DASHBOARD STATS
+
+export async function getDashboardStats(token) {
+
+  const secrets =
+    await getMySecrets(token);
+
+  const now = new Date();
+
+  let active = 0;
+  let expiring = 0;
+
+  secrets.forEach((secret) => {
+
+    if (!secret.expires_at) {
+      active++;
+      return;
+    }
+
+    const expiry =
+      new Date(secret.expires_at);
+
+    const diffDays =
+      (expiry - now) /
+      (1000 * 60 * 60 * 24);
+
+    if (diffDays > 0)
+      active++;
+
+    if (diffDays > 0 &&
+        diffDays <= 7)
+      expiring++;
+
+  });
+
+  return {
+
+    total: secrets.length,
+
+    active,
+
+    expiring,
+
+  };
+
 }

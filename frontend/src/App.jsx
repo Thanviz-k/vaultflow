@@ -9,6 +9,10 @@ import {
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ReportsPage from "./pages/ReportsPage";
+import SecretsPage from "./pages/SecretsPage";
+import SettingsPage from "./pages/SettingsPage";
+import AIAssistantPage from "./pages/AIAssistantPage";
+
 
 
 function App() {
@@ -107,8 +111,9 @@ function App() {
         element={
           token ? (
             <ReportsPage
-              token={token}
-            />
+    token={token}
+    onLogout={handleLogout}
+/>
           ) : (
             <Navigate
               to="/"
@@ -117,6 +122,57 @@ function App() {
           )
         }
       />
+
+      <Route
+  path="/ai"
+  element={
+    token ? (
+      <AIAssistantPage
+        token={token}
+        onLogout={handleLogout}
+      />
+    ) : (
+      <Navigate
+        to="/"
+        replace
+      />
+    )
+  }
+/>
+
+      <Route
+  path="/secrets"
+  element={
+    token ? (
+      <SecretsPage
+    token={token}
+    onLogout={handleLogout}
+/>) : (
+      <Navigate
+        to="/"
+        replace
+      />
+    )
+  }
+/>
+
+
+<Route
+  path="/settings"
+  element={
+    token ? (
+      <SettingsPage
+        token={token}
+        onLogout={handleLogout}
+      />
+    ) : (
+      <Navigate
+        to="/"
+        replace
+      />
+    )
+  }
+/>
 
 
       {/* UNKNOWN ROUTES */}
@@ -138,6 +194,8 @@ function App() {
     </Routes>
   );
 }
+
+
 
 
 export default App;

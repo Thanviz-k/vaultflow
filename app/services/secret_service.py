@@ -2,12 +2,20 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
+from app.models.owner import Owner
 from app.models.secret import Secret
-from app.services.key_service import generate_key_pair
+
 from app.services.audit_service import log_action
+
+from app.services.key_service import (
+    derive_client_half,
+    verify_vault_key,
+    reconstruct_full_key,
+)
+
 from app.services.crypto_service import (
-    encrypt_server_half,
-    encrypt_secret_value,
+    decrypt_server_half,
+    encrypt_secret,
 )
 
 
@@ -16,74 +24,82 @@ def create_secret(
     name: str,
     value: str,
     owner_id,
+    vault_key: str,
     expires_in_days: int | None = 30,
 ) -> dict:
 
-    # Generate split-key material
-    key_data = generate_key_pair()
-
-    # Encrypt server half
-    encrypted_server_half = encrypt_server_half(
-        db,
-        key_data["server_half"],
+    owner = (
+        db.query(Owner)
+        .filter(Owner.id == owner_id)
+        .first()
     )
 
-    # Encrypt the actual secret value
-    encrypted_value = encrypt_secret_value(
-        db,
+    if not owner:
+        raise ValueError("Owner not found")
+
+    # Derive the client half from the Vault Key
+    client_half = derive_client_half(
+        vault_key,
+        owner.vault_salt,
+    )
+
+    # Decrypt the owner's server half
+    server_half = decrypt_server_half(
+        owner.encrypted_server_half
+    )
+
+    # Verify Vault Key
+    if not verify_vault_key(
+        server_half,
+        client_half,
+        owner.key_hash,
+    ):
+        raise ValueError("Invalid Vault Key")
+
+    # Reconstruct full encryption key
+    full_key = reconstruct_full_key(
+        server_half,
+        client_half,
+    )
+
+    encrypted = encrypt_secret(
+        full_key,
         value,
     )
 
-    # Calculate expiry
-    if expires_in_days is None:
-        expires_at = None
+    expires_at = (
+        None
+        if expires_in_days is None
+        else datetime.now(timezone.utc)
+        + timedelta(days=expires_in_days)
+    )
 
-    else:
-        expires_at = (
-            datetime.now(timezone.utc)
-            + timedelta(
-                days=expires_in_days
-            )
-        )
-
-    # Create secret database record
     new_secret = Secret(
         name=name,
         owner_id=owner_id,
-        encrypted_value=encrypted_value,
-        server_half=encrypted_server_half,
-        key_hash=key_data["key_hash"],
+        encrypted_value=encrypted["ciphertext"],
+        nonce=encrypted["nonce"],
         status="active",
         expires_at=expires_at,
     )
 
     db.add(new_secret)
-
-    # Get UUID before commit
     db.flush()
 
-    # Add audit record to same transaction
     log_action(
         db,
         secret_id=new_secret.id,
         action="created",
     )
 
-    # Save secret and audit log together
     db.commit()
-
     db.refresh(new_secret)
 
     return {
-        "id": str(new_secret.id),
+        "id": new_secret.id,
         "name": new_secret.name,
-        "client_half": key_data[
-            "client_half"
-        ],
         "expires_at": new_secret.expires_at,
     }
-
-
 def revoke_secret(
     db: Session,
     secret_id,
@@ -113,7 +129,6 @@ def revoke_secret(
         )
 
         db.commit()
-
         db.refresh(secret)
 
     return secret

@@ -1,8 +1,9 @@
 import uuid
-from sqlalchemy import Column, String, DateTime
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, String, DateTime, LargeBinary
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
 
 from app.core.database import Base
 
@@ -16,7 +17,10 @@ class Owner(Base):
         default=uuid.uuid4,
     )
 
-    name = Column(String, nullable=False)
+    name = Column(
+        String,
+        nullable=False,
+    )
 
     email = Column(
         String,
@@ -26,6 +30,21 @@ class Owner(Base):
     )
 
     password_hash = Column(
+        String,
+        nullable=False,
+    )
+
+    vault_salt = Column(
+        LargeBinary,
+        nullable=False,
+    )
+
+    encrypted_server_half = Column(
+        LargeBinary,
+        nullable=False,
+    )
+
+    key_hash = Column(
         String,
         nullable=False,
     )

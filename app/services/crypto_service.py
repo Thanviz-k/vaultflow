@@ -1,95 +1,100 @@
+import hashlib
 import os
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import hashes
 
 
-MASTER_KEY = os.getenv("MASTER_KEY")
+server_half_key = os.getenv("SERVER_HALF_KEY")
+
+if not server_half_key:
+    raise RuntimeError(
+        "SERVER_HALF_KEY environment variable is not set"
+    )
+
+SERVER_HALF_KEY = hashlib.sha256(
+    server_half_key.encode()
+).digest()
+
+
+def derive_aes_key(full_key: bytes) -> bytes:
+    hkdf = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b"vaultflow-secret-encryption",
+    )
+
+    return hkdf.derive(full_key)
+
+
+def encrypt_secret(
+    full_key: bytes,
+    plaintext: str,
+) -> dict:
+    aes_key = derive_aes_key(full_key)
+
+    aes = AESGCM(aes_key)
+
+    nonce = os.urandom(12)
+
+    ciphertext = aes.encrypt(
+        nonce,
+        plaintext.encode(),
+        None,
+    )
+
+    return {
+        "ciphertext": ciphertext,
+        "nonce": nonce,
+    }
+
+def decrypt_secret(
+    full_key: bytes,
+    ciphertext: bytes,
+    nonce: bytes,
+) -> str:
+    aes_key = derive_aes_key(full_key)
+
+    aes = AESGCM(aes_key)
+
+    plaintext = aes.decrypt(
+        nonce,
+        ciphertext,
+        None,
+    )
+
+    return plaintext.decode()
 
 
 def encrypt_server_half(
-    db: Session,
-    server_half_hex: str,
+    server_half: bytes,
 ) -> bytes:
-    result = db.execute(
-        text(
-            """
-            SELECT pgp_sym_encrypt(
-                :value,
-                :key
-            ) AS encrypted
-            """
-        ),
-        {
-            "value": server_half_hex,
-            "key": MASTER_KEY,
-        },
+    aes = AESGCM(SERVER_HALF_KEY)
+
+    nonce = os.urandom(12)
+
+    encrypted = aes.encrypt(
+        nonce,
+        server_half,
+        None,
     )
 
-    return result.scalar()
+    return nonce + encrypted
 
 
 def decrypt_server_half(
-    db: Session,
-    encrypted_value: bytes,
-) -> str:
-    result = db.execute(
-        text(
-            """
-            SELECT pgp_sym_decrypt(
-                :value,
-                :key
-            ) AS decrypted
-            """
-        ),
-        {
-            "value": encrypted_value,
-            "key": MASTER_KEY,
-        },
-    )
-
-    return result.scalar()
-
-
-def encrypt_secret_value(
-    db: Session,
-    secret_value: str,
+    encrypted_server_half: bytes,
 ) -> bytes:
-    result = db.execute(
-        text(
-            """
-            SELECT pgp_sym_encrypt(
-                :value,
-                :key
-            ) AS encrypted
-            """
-        ),
-        {
-            "value": secret_value,
-            "key": MASTER_KEY,
-        },
+    nonce = encrypted_server_half[:12]
+
+    ciphertext = encrypted_server_half[12:]
+
+    aes = AESGCM(SERVER_HALF_KEY)
+
+    return aes.decrypt(
+        nonce,
+        ciphertext,
+        None,
     )
-
-    return result.scalar()
-
-
-def decrypt_secret_value(
-    db: Session,
-    encrypted_value: bytes,
-) -> str:
-    result = db.execute(
-        text(
-            """
-            SELECT pgp_sym_decrypt(
-                :value,
-                :key
-            ) AS decrypted
-            """
-        ),
-        {
-            "value": encrypted_value,
-            "key": MASTER_KEY,
-        },
-    )
-
-    return result.scalar()

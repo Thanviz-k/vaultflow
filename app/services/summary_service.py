@@ -38,7 +38,7 @@ def summarize_recent_activity(
     )
 
     logs = (
-        db.query(AuditLog)
+        db.query(AuditLog, Secret)
         .join(
             Secret,
             AuditLog.secret_id == Secret.id,
@@ -60,13 +60,13 @@ def summarize_recent_activity(
         )
 
     log_lines = [
-        (
-            f"- {log.action} on secret "
-            f"{log.secret_id} at "
-            f"{log.timestamp.isoformat()}"
-        )
-        for log in logs
-    ]
+    (
+        f"- {log.action} on secret "
+        f"'{secret.name}' at "
+        f"{log.timestamp.isoformat()}"
+    )
+    for log, secret in logs
+]
 
     log_text = "\n".join(log_lines)
 

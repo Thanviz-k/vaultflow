@@ -113,7 +113,11 @@ ${JSON.stringify(
 
 
   return (
-    <main className="reports-page">
+<AppLayout
+    title="Reports"
+    onLogout={onLogout}
+>
+
 
       <header className="reports-header">
 
@@ -282,7 +286,8 @@ ${JSON.stringify(
 
       </section>
 
-    </main>
+   </AppLayout>
+
   );
 }
 

@@ -1,430 +1,123 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import AppLayout from "../layouts/AppLayout";
 
-import {
-  getMySecrets,
-} from "../api";
+import StatCard from "../components/ui/StatCard";
 
-import SecretForm
-  from "../components/SecretForm";
+import { getDashboardStats } from "../api";
 
-import SecretList
-  from "../components/SecretList";
+function DashboardPage({ token, onLogout }) {
 
-
-function DashboardPage({
-  token,
-  onLogout,
-}) {
-  const navigate = useNavigate();
-
-  const [mySecrets, setMySecrets] =
-    useState([]);
-
-  const [error, setError] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [activeFilter, setActiveFilter] =
-    useState("all");
-
-  const [searchTerm, setSearchTerm] =
-    useState("");
-
-
-  const loadMySecrets =
-    useCallback(async () => {
-      setError("");
-
-      try {
-        const data =
-          await getMySecrets(token);
-
-        setMySecrets(data);
-
-      } catch (error) {
-        setError(error.message);
-
-      } finally {
-        setLoading(false);
-      }
-    }, [token]);
-
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    expiring: 0,
+  });
 
   useEffect(() => {
-    loadMySecrets();
-  }, [loadMySecrets]);
+    loadStats();
+  }, []);
 
+  async function loadStats() {
 
-  function handleLogout() {
-    onLogout();
-    navigate("/");
+    try {
+
+      const data =
+        await getDashboardStats(token);
+
+      setStats(data);
+
+    } catch (err) {
+
+      console.error(err);
+
+    }
+
   }
 
-
-  /*
-    COUNTERS
-  */
-
-  const counts = useMemo(() => {
-    return {
-      total: mySecrets.length,
-
-      active: mySecrets.filter(
-        (secret) =>
-          secret.status === "active"
-      ).length,
-
-      expired: mySecrets.filter(
-        (secret) =>
-          secret.status === "expired"
-      ).length,
-
-      revoked: mySecrets.filter(
-        (secret) =>
-          secret.status === "revoked"
-      ).length,
-    };
-  }, [mySecrets]);
-
-
-  /*
-    FILTER + SEARCH
-  */
-
-  const filteredSecrets = useMemo(() => {
-    return mySecrets.filter((secret) => {
-
-      const matchesStatus =
-        activeFilter === "all" ||
-        secret.status === activeFilter;
-
-      const matchesSearch =
-        secret.name
-          .toLowerCase()
-          .includes(
-            searchTerm
-              .trim()
-              .toLowerCase()
-          );
-
-      return (
-        matchesStatus &&
-        matchesSearch
-      );
-    });
-  }, [
-    mySecrets,
-    activeFilter,
-    searchTerm,
-  ]);
-
-
   return (
-    <main className="vault-dashboard">
 
-      {/* HEADER */}
+    <AppLayout
+      title="Dashboard"
+      onLogout={onLogout}
+    >
 
-      <header className="vault-header">
+      <div className="vault-stats">
 
-        <div>
-          <span className="vault-eyebrow">
-            DIGITAL SECRET VAULT
-          </span>
+  <StatCard
+    icon="🔐"
+    title="Total"
+    value={stats.total}
+  />
 
-          <h1>VaultFlow</h1>
+  <StatCard
+    icon="✅"
+    title="Active"
+    value={stats.active}
+  />
 
-          <p>
-            Secure secrets. Controlled access.
-          </p>
-        </div>
+  <StatCard
+    icon="⏰"
+    title="Expiring"
+    value={stats.expiring}
+  />
 
+  <StatCard
+    icon="❌"
+    title="Revoked"
+    value={stats.revoked ?? 0}
+  />
 
-        <div className="vault-header-actions">
+</div>
 
-          <div className="vault-status">
-            <span className="vault-status-light" />
-            SYSTEM SECURE
-          </div>
+      <div className="dashboard-grid">
 
-          <Link
-            to="/reports"
-            className="vault-nav-link"
-          >
-            Intelligence Reports
-          </Link>
+        <section className="dashboard-card">
 
-          <button
-            type="button"
-            className="vault-logout"
-            onClick={handleLogout}
-          >
-            Logout
+          <h2>
+            ⚡ Quick Actions
+          </h2>
+
+          <button className="action-btn">
+            ➕ Create Secret
           </button>
 
-        </div>
+          <button className="action-btn">
+            📊 View Reports
+          </button>
 
-      </header>
+        </section>
 
+        <section className="dashboard-card">
 
-      {/* ERROR */}
+          <h2>
+            📜 Recent Activity
+          </h2>
 
-      {error && (
-        <div className="dashboard-error">
-          {error}
-        </div>
-      )}
+          <ul>
 
+            <li>
+              Secret Created
+            </li>
 
-      {/* STATS */}
+            <li>
+              Secret Revealed
+            </li>
 
-      <section className="vault-stats">
+            <li>
+              Secret Revoked
+            </li>
 
-        <button
-          type="button"
-          className={
-            activeFilter === "all"
-              ? "stat-card selected"
-              : "stat-card"
-          }
-          onClick={() =>
-            setActiveFilter("all")
-          }
-        >
-          <span className="stat-code">
-            VF-01
-          </span>
+          </ul>
 
-          <strong>
-            {counts.total}
-          </strong>
+        </section>
 
-          <span className="stat-name">
-            TOTAL SECRETS
-          </span>
-        </button>
+      </div>
 
+    </AppLayout>
 
-        <button
-          type="button"
-          className={
-            activeFilter === "active"
-              ? "stat-card selected"
-              : "stat-card"
-          }
-          onClick={() =>
-            setActiveFilter("active")
-          }
-        >
-          <span className="stat-code">
-            VF-02
-          </span>
-
-          <strong>
-            {counts.active}
-          </strong>
-
-          <span className="stat-name">
-            ACTIVE
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          className={
-            activeFilter === "expired"
-              ? "stat-card selected"
-              : "stat-card"
-          }
-          onClick={() =>
-            setActiveFilter("expired")
-          }
-        >
-          <span className="stat-code">
-            VF-03
-          </span>
-
-          <strong>
-            {counts.expired}
-          </strong>
-
-          <span className="stat-name">
-            EXPIRED
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          className={
-            activeFilter === "revoked"
-              ? "stat-card selected"
-              : "stat-card"
-          }
-          onClick={() =>
-            setActiveFilter("revoked")
-          }
-        >
-          <span className="stat-code">
-            VF-04
-          </span>
-
-          <strong>
-            {counts.revoked}
-          </strong>
-
-          <span className="stat-name">
-            REVOKED
-          </span>
-        </button>
-
-      </section>
-
-
-      {/* CREATE SECRET */}
-
-      <section className="dashboard-section">
-
-        <div className="section-title-row">
-          <div>
-            <span className="section-index">
-              01 / SECURE STORAGE
-            </span>
-
-            <h2>Create New Secret</h2>
-          </div>
-        </div>
-
-
-        <SecretForm
-          token={token}
-          onSecretCreated={
-            loadMySecrets
-          }
-        />
-
-      </section>
-
-
-      {/* VAULT CONTENTS */}
-
-      <section className="dashboard-section">
-
-        <div className="section-title-row">
-
-          <div>
-            <span className="section-index">
-              02 / VAULT CONTENTS
-            </span>
-
-            <h2>Stored Secrets</h2>
-          </div>
-
-
-          <span className="result-count">
-            {filteredSecrets.length}
-            {" "}
-            RESULT
-            {filteredSecrets.length !== 1
-              ? "S"
-              : ""}
-          </span>
-
-        </div>
-
-
-        {/* SEARCH */}
-
-        <div className="vault-search">
-
-          <span className="search-symbol">
-            ⌕
-          </span>
-
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(e) =>
-              setSearchTerm(
-                e.target.value
-              )
-            }
-            placeholder="Search vault by secret name..."
-          />
-
-        </div>
-
-
-        {/* FILTER BUTTONS */}
-
-        <div className="vault-filter-bar">
-
-          {[
-            "all",
-            "active",
-            "expired",
-            "revoked",
-          ].map((filter) => (
-
-            <button
-              key={filter}
-              type="button"
-              className={
-                activeFilter === filter
-                  ? "filter-button active"
-                  : "filter-button"
-              }
-              onClick={() =>
-                setActiveFilter(filter)
-              }
-            >
-              {filter.toUpperCase()}
-
-              <span>
-                {filter === "all"
-                  ? counts.total
-                  : counts[filter]}
-              </span>
-            </button>
-
-          ))}
-
-        </div>
-
-
-        {/* LIST */}
-
-        {loading ? (
-          <div className="vault-loading">
-            ACCESSING VAULT...
-          </div>
-        ) : (
-          <SecretList
-            secrets={filteredSecrets}
-            token={token}
-            onSecretRevoked={
-              loadMySecrets
-            }
-          />
-        )}
-
-      </section>
-
-    </main>
   );
-}
 
+}
 
 export default DashboardPage;

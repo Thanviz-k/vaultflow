@@ -1,230 +1,630 @@
 import { useState } from "react";
+
 import {
   createOwner,
   loginOwner,
 } from "../api";
 
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import PasswordInput from "../components/ui/PasswordInput";
+import StrengthMeter from "../components/ui/StrengthMeter";
+import PasswordChecklist from "../components/ui/PasswordChecklist";
+import Alert from "../components/ui/Alert";
+
 
 function AuthPage({ setToken }) {
+
+  // =========================
+  // STATE
+  // =========================
+
   const [isRegister, setIsRegister] =
     useState(false);
 
-  const [name, setName] =
-    useState("");
-
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
-  const [loading, setLoading] =
+  const [registrationSuccess,
+    setRegistrationSuccess] =
     useState(false);
 
+  const [vaultKey,
+    setVaultKey] =
+    useState("");
+
+  const [name,
+    setName] =
+    useState("");
+
+  const [email,
+    setEmail] =
+    useState("");
+
+  const [password,
+    setPassword] =
+    useState("");
+
+  const [customPhrase,
+    setCustomPhrase] =
+    useState("");
+
+  const [useCustomPhrase,
+    setUseCustomPhrase] =
+    useState(false);
+
+  const [usedCustomPhrase, setUsedCustomPhrase] =
+  useState(false);
+
+  const [loading,
+    setLoading] =
+    useState(false);
+
+  const [error,
+    setError] =
+    useState("");
+
+
+  // =========================
+  // LOGIN
+  // =========================
 
   async function handleLogin(e) {
+
     e.preventDefault();
 
-    setError("");
     setLoading(true);
 
-    try {
-      const data = await loginOwner(
-        email,
-        password
-      );
-
-      setToken(data.access_token);
-
-    } catch (error) {
-      setError(error.message);
-
-    } finally {
-      setLoading(false);
-    }
-  }
-
-
-  async function handleRegister(e) {
-    e.preventDefault();
-
     setError("");
-    setLoading(true);
 
     try {
-      await createOwner(
-        name,
-        email,
-        password
+
+      const data =
+        await loginOwner(
+          email,
+          password
+        );
+
+      setToken(
+        data.access_token
       );
 
-      setIsRegister(false);
-      setName("");
-      setPassword("");
-
-    } catch (error) {
-      setError(error.message);
-
-    } finally {
-      setLoading(false);
     }
+
+    catch (err) {
+
+      setError(
+        err.message
+      );
+
+    }
+
+    finally {
+
+      setLoading(false);
+
+    }
+
   }
 
+// =========================
+// REGISTER
+// =========================
+// =========================
+// REGISTER
+// =========================
 
-  function switchMode() {
-    setIsRegister(!isRegister);
-    setError("");
+async function handleRegister(e) {
+
+  e.preventDefault();
+
+  setLoading(true);
+
+  setError("");
+
+  try {
+
+    const data = await createOwner(
+
+      name,
+
+      email,
+
+      password,
+
+      useCustomPhrase,
+
+      useCustomPhrase
+        ? customPhrase
+        : null,
+
+    );
+
+    setUsedCustomPhrase(
+      data.use_custom_passphrase
+    );
+
+    // Generated Vault Key
+    if (!data.use_custom_passphrase) {
+
+      setVaultKey(
+        data.client_half
+      );
+
+      const blob = new Blob(
+        [data.client_half],
+        {
+          type: "text/plain",
+        }
+      );
+
+      const url =
+        URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = url;
+
+      link.download =
+        "vaultflow.key";
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+
+      link.remove();
+
+      URL.revokeObjectURL(url);
+
+    }
+
+    // Custom Vault Key
+    else {
+
+      setVaultKey("");
+
+    }
+
+    setRegistrationSuccess(true);
+
+    setName("");
+
+    setEmail("");
+
     setPassword("");
+
+    setCustomPhrase("");
+
   }
 
+  catch (err) {
+
+    setError(
+      err.message
+    );
+
+  }
+
+  finally {
+
+    setLoading(false);
+
+  }
+
+}
+  // =========================
+  // HELPERS
+  // =========================
+
+  function copyVaultKey() {
+
+    navigator.clipboard.writeText(
+      vaultKey
+    );
+
+  }
+
+  function downloadVaultKey() {
+
+    const blob =
+      new Blob(
+        [vaultKey],
+        {
+          type:
+            "text/plain",
+        }
+      );
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+    const link =
+      document.createElement(
+        "a"
+      );
+
+    link.href = url;
+
+    link.download =
+      "vaultflow.key";
+
+    link.click();
+
+    URL.revokeObjectURL(
+      url
+    );
+
+  }
+  // =========================
+  // SUCCESS SCREEN
+  // =========================
+
+  if (registrationSuccess) {
+
+    return (
+
+      <main className="auth-page">
+
+        <Card className="auth-card">
+
+          <h1>
+  🎉 Account Created!
+</h1>
+
+{!usedCustomPhrase ? (
+
+  <>
+
+    <p>
+      Your Vault Key has been generated successfully.
+    </p>
+
+    <div className="vault-key-box">
+
+      <label>
+        Vault Key
+      </label>
+
+      <textarea
+        value={vaultKey}
+        readOnly
+        rows={4}
+      />
+
+    </div>
+
+    <p className="vault-warning">
+
+      ⚠️ Save this Vault Key safely.
+      It will never be shown again.
+
+    </p>
+
+    <Button
+      variant="secondary"
+      onClick={copyVaultKey}
+    >
+      📋 Copy Vault Key
+    </Button>
+
+    <br />
+    <br />
+
+    <Button
+      variant="secondary"
+      onClick={downloadVaultKey}
+    >
+      ⬇ Download Again
+    </Button>
+
+  </>
+
+) : (
+
+  <>
+
+    <p>
+
+      ✅ Your custom Vault Key has been registered successfully.
+
+    </p>
+
+    <p className="vault-warning">
+
+      ⚠️ Remember your custom Vault Key.
+      It cannot be recovered if forgotten.
+
+    </p>
+
+  </>
+
+)}
+
+          <br />
+          <br />
+
+          <Button
+            onClick={() => {
+
+              setRegistrationSuccess(false);
+
+              setIsRegister(false);
+
+            }}
+          >
+            Continue to Login →
+          </Button>
+
+        </Card>
+
+      </main>
+
+    );
+
+  }
+
+  // =========================
+  // MAIN UI
+  // =========================
 
   return (
+
     <main className="auth-page">
 
-      <div className="auth-brand">
-        <div className="brand-icon">
-          🔐
-        </div>
+      <Card className="auth-card">
 
-        <h1>VaultFlow</h1>
-
-        <p>
-          Secure secrets. Simple access.
-        </p>
-      </div>
-
-
-      <section className="auth-card">
-
-        <h2>
-          {isRegister
-            ? "Create Account"
-            : "Welcome Back"}
-        </h2>
-
+        <h1>
+          🔐 VaultFlow
+        </h1>
 
         <p className="auth-subtitle">
-          {isRegister
-            ? "Create your VaultFlow account"
-            : "Sign in to access your vault"}
+
+          Secure Secrets.
+          Simple Access.
+
         </p>
 
+        {
+
+          error && (
+
+            <Alert type="error">
+
+                  {error}
+
+            </Alert>
+
+          )
+
+        }
+
+        <h2>
+
+          {
+
+            isRegister
+
+              ? "Create Account"
+
+              : "Welcome Back"
+
+          }
+
+        </h2>
 
         <form
+
           onSubmit={
+
             isRegister
+
               ? handleRegister
+
               : handleLogin
+
           }
+
         >
 
-          {isRegister && (
-            <div className="auth-field">
+          {
 
-              <label>
-                Name
-              </label>
+            isRegister && (
 
-              <input
-                type="text"
+              <Input
+
+                label="Name"
+
                 value={name}
+
                 onChange={(e) =>
-                  setName(e.target.value)
+                  setName(
+                    e.target.value
+                  )
                 }
+
                 placeholder="Enter your name"
+
                 required
+
               />
 
-            </div>
-          )}
+            )
+
+          }
+
+          <Input
+
+            label="Email"
+
+            type="email"
+
+            value={email}
+
+            onChange={(e) =>
+              setEmail(
+                e.target.value
+              )
+            }
+
+            placeholder="you@example.com"
+
+            required
+
+          />
+
+          <PasswordInput
+
+            label="Password"
+
+            value={password}
+
+            onChange={(e) =>
+              setPassword(
+                e.target.value
+              )
+            }
+
+            placeholder="Enter your password"
+
+            required
+
+          />
+          {
+            isRegister && (
+              <>
+                <hr />
+
+                <h3>
+                  🔑 Vault Key
+                </h3>
+
+                <p className="auth-subtitle">
+                  Choose how you want to protect
+                  your encrypted secrets.
+                </p>
+
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    checked={!useCustomPhrase}
+                    onChange={() => setUseCustomPhrase(false)}
+                  />
+                  Generate Secure Vault Key ⭐ Recommended
+                </label>
+
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    checked={useCustomPhrase}
+                    onChange={() => setUseCustomPhrase(true)}
+                  />
+                  Create My Own Vault Key
+                </label>
+
+                {useCustomPhrase && (
+                  <>
+                    <PasswordInput
+                      label="Vault Key"
+                      value={customPhrase}
+                      onChange={(e) => setCustomPhrase(e.target.value)}
+                      placeholder="Create your Vault Key"
+                    />
+
+                    <StrengthMeter value={customPhrase}/>
 
 
-          <div className="auth-field">
+                    <PasswordChecklist value={customPhrase}/>
 
-            <label>
-              Email
-            </label>
+                  </>
+                )}
+              </>
+            )
+          }
 
-            <input
-              type="email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              placeholder="you@example.com"
-              required
-            />
+          <Button
 
-          </div>
-
-
-          <div className="auth-field">
-
-            <label>
-              Password
-            </label>
-
-            <input
-              type="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              placeholder="Enter your password"
-              required
-            />
-
-          </div>
-
-
-          {error && (
-            <p className="auth-error">
-              {error}
-            </p>
-          )}
-
-
-          <button
-            className="auth-button"
             type="submit"
+
             disabled={loading}
+
           >
-            {loading
-              ? "Please wait..."
-              : isRegister
-                ? "Create Account"
-                : "Login"}
-          </button>
+
+            {
+
+              loading
+
+                ? "Please wait..."
+
+                : isRegister
+
+                  ? "Create Account"
+
+                  : "Login"
+
+            }
+
+          </Button>
+                    <p className="auth-switch">
+
+            {
+
+              isRegister
+
+                ? "Already have an account?"
+
+                : "New to VaultFlow?"
+
+            }
+
+            <button
+
+              type="button"
+
+              className="link-button"
+
+              onClick={() => {
+
+                setIsRegister(
+                  !isRegister
+                );
+
+                setError("");
+
+                setPassword("");
+
+                setCustomPhrase("");
+
+                setUseCustomPhrase(false);
+
+              }}
+
+            >
+
+              {
+
+                isRegister
+
+                  ? "Login"
+
+                  : "Create Account"
+
+              }
+
+            </button>
+
+          </p>
 
         </form>
 
-
-        <p className="auth-switch">
-
-          {isRegister
-            ? "Already have an account?"
-            : "New user?"}
-
-
-          <button
-            type="button"
-            onClick={switchMode}
-          >
-            {isRegister
-              ? "Login"
-              : "Create account"}
-          </button>
-
-        </p>
-
-      </section>
+      </Card>
 
     </main>
-  );
-}
 
+  );
+
+}
 
 export default AuthPage;
