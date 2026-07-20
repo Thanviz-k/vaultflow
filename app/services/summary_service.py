@@ -6,7 +6,6 @@ from app.models.audit_log import AuditLog
 from app.models.secret import Secret
 from app.services.ai_service import ask_ai
 
-
 SYSTEM_PROMPT = """
 You are a security analyst summarizing audit log activity
 for a secrets manager called VaultFlow.
@@ -32,10 +31,7 @@ def summarize_recent_activity(
     days: int = 7,
 ) -> str:
 
-    cutoff = (
-        datetime.now(timezone.utc)
-        - timedelta(days=days)
-    )
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
     logs = (
         db.query(AuditLog, Secret)
@@ -47,35 +43,27 @@ def summarize_recent_activity(
             Secret.owner_id == owner_id,
             AuditLog.timestamp >= cutoff,
         )
-        .order_by(
-            AuditLog.timestamp.desc()
-        )
+        .order_by(AuditLog.timestamp.desc())
         .all()
     )
 
     if not logs:
-        return (
-            f"No activity in the last "
-            f"{days} days."
-        )
+        return f"No activity in the last " f"{days} days."
 
     log_lines = [
-    (
-        f"- {log.action} on secret "
-        f"'{secret.name}' at "
-        f"{log.timestamp.isoformat()}"
-    )
-    for log, secret in logs
-]
+        (
+            f"- {log.action} on secret "
+            f"'{secret.name}' at "
+            f"{log.timestamp.isoformat()}"
+        )
+        for log, secret in logs
+    ]
 
     log_text = "\n".join(log_lines)
 
     summary = ask_ai(
         SYSTEM_PROMPT,
-        (
-            "Here is the audit log activity:\n"
-            f"{log_text}"
-        ),
+        ("Here is the audit log activity:\n" f"{log_text}"),
     )
 
     return summary

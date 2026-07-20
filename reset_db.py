@@ -1,5 +1,4 @@
 from app.core.database import Base, engine
-from app.models import Owner, Secret, AuditLog
 
 print("DATABASE:", engine.url)
 print("TABLES:", list(Base.metadata.tables.keys()))

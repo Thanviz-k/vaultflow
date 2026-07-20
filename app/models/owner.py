@@ -1,7 +1,13 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, String, DateTime, LargeBinary
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    LargeBinary,
+    Boolean,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -39,13 +45,19 @@ class Owner(Base):
         nullable=False,
     )
 
-    encrypted_server_half = Column(
+    server_half = Column(
         LargeBinary,
         nullable=False,
     )
 
     key_hash = Column(
         String,
+        nullable=False,
+    )
+
+    vault_initialized = Column(
+        Boolean,
+        default=False,
         nullable=False,
     )
 

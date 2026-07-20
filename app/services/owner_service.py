@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from app.models.owner import Owner
 
 from app.services.auth_service import hash_password
-from app.services.crypto_service import encrypt_server_half
+
 
 from app.services.key_service import (
     generate_vault_key,
     generate_vault_salt,
-    derive_key_pair_from_vault_key,
+    initialize_vault,
 )
 
 
@@ -44,18 +44,14 @@ def create_owner(
 
     elif mode == "custom":
         if not vault_key:
-            raise ValueError(
-                "Vault Key is required for custom mode."
-            )
+            raise ValueError("Vault Key is required for custom mode.")
 
         final_vault_key = vault_key
 
     else:
-        raise ValueError(
-            "Invalid Vault Key mode."
-        )
+        raise ValueError("Invalid Vault Key mode.")
 
-    key_data = derive_key_pair_from_vault_key(
+    key_data = initialize_vault(
         final_vault_key,
         vault_salt,
     )
@@ -65,9 +61,7 @@ def create_owner(
         email=email,
         password_hash=hash_password(password),
         vault_salt=vault_salt,
-        encrypted_server_half=encrypt_server_half(
-            key_data["server_half"]
-        ),
+        server_half=key_data["server_half"],
         key_hash=key_data["key_hash"],
     )
 

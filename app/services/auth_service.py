@@ -1,22 +1,11 @@
-
-import os
-from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 from pwdlib import PasswordHash
 
+from app.core.config import settings
 
 password_hash = PasswordHash.recommended()
-load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
-
-if not SECRET_KEY:
-    raise RuntimeError(
-        "SECRET_KEY environment variable is not set"
-    )
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 def hash_password(password: str) -> str:
@@ -35,34 +24,30 @@ def verify_password(
 
 def create_access_token(owner_id: str) -> str:
     expires_at = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
     payload = {
-        "sub": owner_id,
+        "sub": str(owner_id),
         "exp": expires_at,
     }
 
-    token = jwt.encode(
+    return jwt.encode(
         payload,
-        SECRET_KEY,
-        algorithm=ALGORITHM,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
     )
-
-    return token
 
 
 def decode_access_token(token: str) -> str | None:
     try:
         payload = jwt.decode(
             token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM],
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
         )
 
-        owner_id = payload.get("sub")
-
-        return owner_id
+        return payload.get("sub")
 
     except JWTError:
         return None

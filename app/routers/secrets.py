@@ -1,10 +1,11 @@
-from datetime import datetime, timezone
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from uuid import UUID
 from sqlalchemy.orm import Session
 
-from app.core.auth_dependencies import get_current_owner
 from app.core.database import get_db
+
+
+from app.dependencies.auth import get_current_owner
 
 from app.models.owner import Owner
 from app.models.secret import Secret
@@ -14,6 +15,7 @@ from app.schemas.secret import (
     QueryResponse,
     SecretCreateRequest,
     SecretCreateResponse,
+    SecretDeleteResponse,
     SecretListItem,
     SecretRevealRequest,
     SecretRevealResponse,
@@ -22,34 +24,31 @@ from app.schemas.secret import (
     SummaryResponse,
 )
 
-from app.services.audit_service import log_action
-from app.services.crypto_service import (
-    decrypt_secret,
-    decrypt_server_half,
-)
-from app.services.key_service import (
-    derive_client_half,
-    verify_vault_key,
-    reconstruct_full_key,
-)
 from app.services.query_service import (
     run_natural_language_query,
 )
 from app.services.secret_service import (
     create_secret,
     revoke_secret,
+    delete_secret,
+    reveal_secret,
 )
 from app.services.summary_service import (
     summarize_recent_activity,
 )
 
-
 router = APIRouter(
     prefix="/secrets",
-    tags=["secrets"],
+    tags=["Secrets"],
 )
 
 
+@router.post(
+    "/",
+    summary="Create Secret",
+    description="Encrypt and securely store a secret.",
+    response_model=SecretCreateResponse,
+)
 @router.post(
     "/",
     response_model=SecretCreateResponse,
@@ -60,7 +59,7 @@ def create_secret_endpoint(
     current_owner: Owner = Depends(get_current_owner),
 ):
 
-    result = create_secret(
+    secret = create_secret(
         db=db,
         name=payload.name,
         value=payload.value,
@@ -69,7 +68,12 @@ def create_secret_endpoint(
         expires_in_days=payload.expires_in_days,
     )
 
-    return result
+    return SecretCreateResponse(
+        id=str(secret.id),
+        message="Secret created successfully.",
+        name=secret.name,
+        expires_at=secret.expires_at,
+    )
 
 
 @router.get(
@@ -83,16 +87,13 @@ def get_my_secrets(
 
     secrets = (
         db.query(Secret)
-        .filter(
-            Secret.owner_id == current_owner.id
-        )
-        .order_by(
-            Secret.created_at.desc()
-        )
+        .filter(Secret.owner_id == current_owner.id)
+        .order_by(Secret.created_at.desc())
         .all()
     )
 
     return secrets
+
 
 @router.post(
     "/reveal",
@@ -104,112 +105,19 @@ def reveal_secret_endpoint(
     current_owner: Owner = Depends(get_current_owner),
 ):
 
-    # Find the secret
-    secret = (
-        db.query(Secret)
-        .filter(
-            Secret.id == payload.secret_id,
-            Secret.owner_id == current_owner.id,
-        )
-        .first()
+    secret = reveal_secret(
+        db=db,
+        secret_id=payload.secret_id,
+        owner_id=current_owner.id,
+        vault_key=payload.vault_key,
     )
-
-    if not secret:
-        raise HTTPException(
-            status_code=404,
-            detail="Secret not found",
-        )
-
-    # Find the owner
-    owner = (
-        db.query(Owner)
-        .filter(
-            Owner.id == current_owner.id
-        )
-        .first()
-    )
-
-    if not owner:
-        raise HTTPException(
-            status_code=404,
-            detail="Owner not found",
-        )
-
-    # Secret must be active
-    if secret.status != "active":
-        raise HTTPException(
-            status_code=403,
-            detail=f"Cannot reveal a {secret.status} secret",
-        )
-
-    # Decrypt owner's server half
-    server_half = decrypt_server_half(
-        owner.encrypted_server_half
-    )
-
-    # Verify the client half
-    client_half = derive_client_half(
-    payload.vault_key,
-    owner.vault_salt,
-)
-
-    is_valid = verify_vault_key(
-        server_half,
-        client_half,
-        owner.key_hash,
-    )
-
-    if not is_valid:
-
-        log_action(
-            db,
-            secret_id=secret.id,
-            action="reveal_failed",
-            metadata={
-                "reason": "invalid_vault_key",
-            },
-        )
-
-        db.commit()
-
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid Vault Key",
-        )
-
-    # Reconstruct full key
-    full_key = reconstruct_full_key(
-    server_half,
-    client_half,
-)
-
-    # Decrypt secret
-    secret_value = decrypt_secret(
-        full_key,
-        secret.encrypted_value,
-        secret.nonce,
-    )
-
-    # Update last accessed time
-    secret.last_accessed_at = datetime.now(
-        timezone.utc
-    )
-
-    log_action(
-        db,
-        secret_id=secret.id,
-        action="revealed",
-    )
-
-    db.commit()
-
-    db.refresh(secret)
 
     return SecretRevealResponse(
-        id=secret.id,
-        name=secret.name,
-        value=secret_value,
+        id=secret["id"],
+        name=secret["name"],
+        value=secret["value"],
     )
+
 
 @router.post(
     "/query",
@@ -267,13 +175,29 @@ def revoke_secret_endpoint(
         owner_id=current_owner.id,
     )
 
-    if not secret:
-        raise HTTPException(
-            status_code=404,
-            detail="Secret not found",
-        )
-
     return SecretRevokeResponse(
         id=secret.id,
         status=secret.status,
+    )
+
+
+@router.delete(
+    "/{secret_id}",
+    response_model=SecretDeleteResponse,
+)
+def delete_secret_endpoint(
+    secret_id: UUID,
+    db: Session = Depends(get_db),
+    current_owner: Owner = Depends(get_current_owner),
+):
+
+    delete_secret(
+        db=db,
+        secret_id=secret_id,
+        owner_id=current_owner.id,
+    )
+
+    return SecretDeleteResponse(
+        id=secret_id,
+        message="Secret deleted successfully.",
     )

@@ -1,21 +1,25 @@
 from datetime import datetime, timedelta, timezone
-
+from app.services.crypto_service import decrypt_secret
 from sqlalchemy.orm import Session
 
 from app.models.owner import Owner
 from app.models.secret import Secret
 
 from app.services.audit_service import log_action
-
 from app.services.key_service import (
     derive_client_half,
+    derive_user_root_key,
     verify_vault_key,
-    reconstruct_full_key,
 )
+from app.core.logger import logger
 
 from app.services.crypto_service import (
-    decrypt_server_half,
     encrypt_secret,
+)
+from app.core.exceptions import (
+    AuthenticationError,
+    ResourceNotFoundError,
+    VaultError,
 )
 
 
@@ -26,52 +30,47 @@ def create_secret(
     owner_id,
     vault_key: str,
     expires_in_days: int | None = 30,
-) -> dict:
+) -> Secret:
 
-    owner = (
-        db.query(Owner)
-        .filter(Owner.id == owner_id)
-        .first()
-    )
+    owner = db.query(Owner).filter(Owner.id == owner_id).first()
 
     if not owner:
-        raise ValueError("Owner not found")
+        raise ResourceNotFoundError("Owner not found")
 
-    # Derive the client half from the Vault Key
+    if not owner.vault_initialized:
+        raise VaultError("Vault has not been initialized")
+
     client_half = derive_client_half(
         vault_key,
         owner.vault_salt,
     )
 
-    # Decrypt the owner's server half
-    server_half = decrypt_server_half(
-        owner.encrypted_server_half
-    )
-
-    # Verify Vault Key
     if not verify_vault_key(
-        server_half,
+        owner.server_half,
         client_half,
         owner.key_hash,
     ):
-        raise ValueError("Invalid Vault Key")
+        logger.warning(
+            "Invalid Vault Key for owner %s",
+            owner.email,
+        )
 
-    # Reconstruct full encryption key
-    full_key = reconstruct_full_key(
-        server_half,
+        raise AuthenticationError("Invalid Vault Key")
+
+    root_key = derive_user_root_key(
+        owner.server_half,
         client_half,
     )
 
     encrypted = encrypt_secret(
-        full_key,
+        root_key,
         value,
     )
 
     expires_at = (
         None
         if expires_in_days is None
-        else datetime.now(timezone.utc)
-        + timedelta(days=expires_in_days)
+        else datetime.now(timezone.utc) + timedelta(days=expires_in_days)
     )
 
     new_secret = Secret(
@@ -95,11 +94,15 @@ def create_secret(
     db.commit()
     db.refresh(new_secret)
 
-    return {
-        "id": new_secret.id,
-        "name": new_secret.name,
-        "expires_at": new_secret.expires_at,
-    }
+    logger.info(
+        "Secret '%s' created by owner %s",
+        name,
+        owner.email,
+    )
+
+    return new_secret
+
+
 def revoke_secret(
     db: Session,
     secret_id,
@@ -114,9 +117,8 @@ def revoke_secret(
         )
         .first()
     )
-
     if not secret:
-        return None
+        raise ResourceNotFoundError("Secret not found")
 
     if secret.status == "active":
 
@@ -131,4 +133,136 @@ def revoke_secret(
         db.commit()
         db.refresh(secret)
 
+    logger.info(
+        "Secret revoked by owner %s",
+        owner_id,
+    )
     return secret
+
+
+def delete_secret(
+    db: Session,
+    secret_id,
+    owner_id,
+) -> bool:
+
+    secret = (
+        db.query(Secret)
+        .filter(
+            Secret.id == secret_id,
+            Secret.owner_id == owner_id,
+        )
+        .first()
+    )
+
+    if not secret:
+        raise ResourceNotFoundError("Secret not found")
+
+    log_action(
+        db,
+        secret_id=secret.id,
+        action="deleted",
+    )
+
+    db.delete(secret)
+    db.commit()
+
+    logger.info(
+        "Secret deleted by owner %s",
+        owner_id,
+    )
+
+    return True
+
+
+def reveal_secret(
+    db: Session,
+    secret_id,
+    owner_id,
+    vault_key: str,
+) -> dict:
+
+    owner = db.query(Owner).filter(Owner.id == owner_id).first()
+
+    if not owner:
+        raise ResourceNotFoundError("Owner not found")
+
+    if not owner.vault_initialized:
+        raise VaultError("Vault has not been initialized")
+
+    secret = (
+        db.query(Secret)
+        .filter(
+            Secret.id == secret_id,
+            Secret.owner_id == owner_id,
+        )
+        .first()
+    )
+
+    if not secret:
+        raise ResourceNotFoundError("Secret not found")
+
+    if secret.status != "active":
+        raise AuthenticationError(f"Cannot reveal a {secret.status} secret")
+
+    client_half = derive_client_half(
+        vault_key,
+        owner.vault_salt,
+    )
+
+    if not verify_vault_key(
+        owner.server_half,
+        client_half,
+        owner.key_hash,
+    ):
+        log_action(
+            db,
+            secret_id=secret.id,
+            action="reveal_failed",
+            metadata={
+                "reason": "invalid_vault_key",
+            },
+        )
+
+        db.commit()
+
+        logger.warning(
+            "Invalid Vault Key for owner %s",
+            owner.email,
+        )
+
+        raise AuthenticationError("Invalid Vault Key")
+
+    root_key = derive_user_root_key(
+        owner.server_half,
+        client_half,
+    )
+
+    value = decrypt_secret(
+        root_key,
+        secret.encrypted_value,
+        secret.nonce,
+    )
+
+    secret.last_accessed_at = datetime.now(timezone.utc)
+
+    log_action(
+        db,
+        secret_id=secret.id,
+        action="revealed",
+    )
+
+    db.commit()
+    db.refresh(secret)
+
+    logger.info(
+        "Secret '%s' revealed by owner %s",
+        secret.name,
+        owner.email,
+    )
+
+    return {
+        "id": secret.id,
+        "name": secret.name,
+        "value": value,
+    }

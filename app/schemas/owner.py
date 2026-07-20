@@ -1,21 +1,10 @@
 from datetime import datetime
 from uuid import UUID
-
 from pydantic import BaseModel, EmailStr
 from typing import Literal
-
-
-class OwnerCreateRequest(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-
-    # "generated" -> VaultFlow generates a Vault Key
-    # "custom" -> User provides their own Vault Key
-    mode: Literal["generated", "custom"] = "generated"
-
-    # Required only when mode == "custom"
-    vault_key: str | None = None
+from pydantic import field_validator
+import re
+from pydantic import ConfigDict
 
 
 class OwnerInfo(BaseModel):
@@ -24,8 +13,7 @@ class OwnerInfo(BaseModel):
     email: EmailStr
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OwnerCreateResponse(BaseModel):
@@ -43,3 +31,32 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str
+
+
+class OwnerCreateRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
+    mode: Literal["generated", "custom"] = "generated"
+    vault_key: str | None = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters.")
+
+        if not re.search(r"[A-Z]", value):
+            raise ValueError("Password must contain an uppercase letter.")
+
+        if not re.search(r"[a-z]", value):
+            raise ValueError("Password must contain a lowercase letter.")
+
+        if not re.search(r"\d", value):
+            raise ValueError("Password must contain a digit.")
+
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
+            raise ValueError("Password must contain a special character.")
+
+        return value

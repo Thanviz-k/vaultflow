@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from app.models.secret import Secret
 from app.services.ai_service import ask_ai
 
-
 SYSTEM_PROMPT = """
 You are a query intent classifier for a secrets manager called VaultFlow.
 
@@ -36,6 +35,7 @@ Examples:
 {"action": "list_secrets", "status_filter": "active", "expiring_within_days": null}
 """
 
+
 def run_natural_language_query(
     db: Session,
     question: str,
@@ -49,55 +49,29 @@ def run_natural_language_query(
 
     intent = json.loads(raw_response)
 
-
     # Start with ONLY this owner's secrets
 
-    query = (
-        db.query(Secret)
-        .filter(
-            Secret.owner_id == owner_id
-        )
-    )
-
+    query = db.query(Secret).filter(Secret.owner_id == owner_id)
 
     # STATUS FILTER
 
     if intent.get("status_filter"):
-        query = query.filter(
-            Secret.status
-            == intent["status_filter"]
-        )
-
+        query = query.filter(Secret.status == intent["status_filter"])
 
     # EXPIRY FILTER
 
-    if (
-        intent.get(
-            "expiring_within_days"
-        )
-        is not None
-    ):
-        days = int(
-            intent[
-                "expiring_within_days"
-            ]
-        )
+    if intent.get("expiring_within_days") is not None:
+        days = int(intent["expiring_within_days"])
 
-        now = datetime.now(
-            timezone.utc
-        )
+        now = datetime.now(timezone.utc)
 
-        cutoff = (
-            now
-            + timedelta(days=days)
-        )
+        cutoff = now + timedelta(days=days)
 
         query = query.filter(
             Secret.expires_at.isnot(None),
             Secret.expires_at >= now,
             Secret.expires_at <= cutoff,
         )
-
 
     # COUNT
 
@@ -106,40 +80,26 @@ def run_natural_language_query(
 
         return {
             "intent": intent,
-            "result": {
-                "count": count
-            },
+            "result": {"count": count},
         }
-
 
     # LIST
 
     results = query.all()
 
-
     secrets_list = [
         {
             "id": str(secret.id),
-
             "name": secret.name,
-
             "status": secret.status,
-
             "expires_at": (
-                secret.expires_at.isoformat()
-                if secret.expires_at
-                else None
+                secret.expires_at.isoformat() if secret.expires_at else None
             ),
         }
-
         for secret in results
     ]
 
-
     return {
         "intent": intent,
-
-        "result": {
-            "secrets": secrets_list
-        },
+        "result": {"secrets": secrets_list},
     }

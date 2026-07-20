@@ -1,10 +1,10 @@
 import hashlib
 import hmac
 import secrets
-import string
 
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 KEY_LENGTH_BYTES = 32
 HALF_LENGTH = KEY_LENGTH_BYTES // 2
@@ -32,22 +32,41 @@ def generate_vault_key() -> str:
     groups = []
 
     for _ in range(4):
-        group = "".join(
-            secrets.choice(ALPHABET)
-            for _ in range(4)
-        )
+        group = "".join(secrets.choice(ALPHABET) for _ in range(4))
         groups.append(group)
 
     return "VF-" + "-".join(groups)
 
 
-def derive_key_pair_from_vault_key(
+def derive_user_root_key(
+    server_half: bytes,
+    client_half: bytes,
+) -> bytes:
+    """
+    Derive the user's root encryption key using HKDF.
+    """
+
+    hkdf = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=server_half,
+        info=b"vaultflow-root-key",
+    )
+
+    return hkdf.derive(client_half)
+
+
+def initialize_vault(
     vault_key: str,
     salt: bytes,
 ) -> dict:
     """
-    Derive the client half from the Vault Key and
-    generate a random server half.
+    Initialize a user's vault.
+
+    - Generate Server Half
+    - Derive Client Half
+    - Derive Root Key
+    - Store verification hash
     """
 
     server_half = secrets.token_bytes(HALF_LENGTH)
@@ -59,28 +78,28 @@ def derive_key_pair_from_vault_key(
         iterations=PBKDF2_ITERATIONS,
     )
 
-    client_half = kdf.derive(
-        vault_key.encode("utf-8")
+    client_half = kdf.derive(vault_key.encode("utf-8"))
+
+    root_key = derive_user_root_key(
+        server_half,
+        client_half,
     )
 
-    full_key = server_half + client_half
-
-    key_hash = hashlib.sha256(full_key).hexdigest()
+    key_hash = hashlib.sha256(root_key).hexdigest()
 
     return {
-        "full_key": full_key,
         "server_half": server_half,
-        "client_half": client_half.hex(),
         "key_hash": key_hash,
     }
+
 
 def derive_client_half(
     vault_key: str,
     salt: bytes,
-) -> str:
+) -> bytes:
     """
-    Derive only the client half from an existing Vault Key.
-    Used when encrypting/decrypting secrets.
+    Derive the client half from an existing Vault Key.
+    Used during encryption and decryption.
     """
 
     kdf = PBKDF2HMAC(
@@ -90,45 +109,26 @@ def derive_client_half(
         iterations=PBKDF2_ITERATIONS,
     )
 
-    client_half = kdf.derive(
-        vault_key.encode("utf-8")
-    )
+    client_half = kdf.derive(vault_key.encode("utf-8"))
 
-    return client_half.hex()
-
-def reconstruct_full_key(
-    server_half: bytes,
-    client_half_hex: str,
-) -> bytes:
-    """
-    Reconstruct the original encryption key.
-    """
-
-    return (
-        server_half +
-        bytes.fromhex(client_half_hex)
-    )
+    return client_half
 
 
 def verify_vault_key(
     server_half: bytes,
-    client_half_hex: str,
+    client_half: bytes,
     stored_hash: str,
 ) -> bool:
     """
     Verify that the supplied Vault Key is correct.
     """
 
-    try:
-        client_half = bytes.fromhex(client_half_hex)
-    except ValueError:
-        return False
+    root_key = derive_user_root_key(
+        server_half,
+        client_half,
+    )
 
-    full_key = server_half + client_half
-
-    computed_hash = hashlib.sha256(
-        full_key
-    ).hexdigest()
+    computed_hash = hashlib.sha256(root_key).hexdigest()
 
     return hmac.compare_digest(
         computed_hash,
