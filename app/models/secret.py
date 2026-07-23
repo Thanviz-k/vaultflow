@@ -15,17 +15,27 @@ class Secret(Base):
     status = Column(String, nullable=False, default="active")
     nonce = Column(
         LargeBinary,
-        nullable=False,
+        nullable=True,
     )
     created_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     expires_at = Column(DateTime(timezone=True), nullable=True)
     last_accessed_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_at = Column(
+    DateTime(timezone=True),
+    nullable=True,
+)
     encrypted_value = Column(
         LargeBinary,
-        nullable=False,
+        nullable=True,
     )
     owner = relationship("Owner", back_populates="secrets")
 
-    audit_logs = relationship("AuditLog", back_populates="secret")
+    
+    audit_logs = relationship(
+    "AuditLog",
+    back_populates="secret",
+    cascade="all, delete-orphan",
+    passive_deletes=True,
+)

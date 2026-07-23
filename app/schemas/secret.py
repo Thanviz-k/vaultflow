@@ -54,6 +54,17 @@ class SecretListItem(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class RevokedSecretItem(BaseModel):
+    id: UUID
+    name: str
+    status: str
+    created_at: datetime
+    revoked_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+  
+
 
 class SecretRevealRequest(BaseModel):
     secret_id: UUID
@@ -71,7 +82,7 @@ class SecretRevealResponse(BaseModel):
 
 class SecretRevokeRequest(BaseModel):
     secret_id: UUID
-
+    vault_key: str
 
 class SecretRevokeResponse(BaseModel):
     id: UUID
@@ -97,3 +108,38 @@ class SummaryResponse(BaseModel):
 class SecretDeleteResponse(BaseModel):
     id: UUID
     message: str
+
+class SecretUpdateRequest(BaseModel):
+    name: str = Field(
+        min_length=3,
+        max_length=100,
+    )
+
+    value: str = Field(
+        min_length=1,
+        max_length=5000,
+    )
+
+    vault_key: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str):
+        value = value.strip()
+
+        if not value:
+            raise ValueError("Secret name cannot be empty.")
+
+        return value
+
+
+class SecretUpdateResponse(BaseModel):
+    id: UUID
+    message: str
+
+class SecretDeleteRequest(BaseModel):
+    secret_id: UUID
+    vault_key: str

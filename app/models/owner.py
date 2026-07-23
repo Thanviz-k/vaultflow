@@ -42,17 +42,17 @@ class Owner(Base):
 
     vault_salt = Column(
         LargeBinary,
-        nullable=False,
+        nullable=True,
     )
 
     server_half = Column(
         LargeBinary,
-        nullable=False,
+        nullable=True,
     )
 
     key_hash = Column(
         String,
-        nullable=False,
+        nullable=True,
     )
 
     vault_initialized = Column(

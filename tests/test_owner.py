@@ -14,4 +14,4 @@ def test_register_owner(client):
         },
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201

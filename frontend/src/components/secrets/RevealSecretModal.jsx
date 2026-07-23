@@ -64,6 +64,7 @@ function RevealSecretModal({
       setRevealedSecret(
         data.value
       );
+      setVaultKey("");
 
       setShowSecret(true);
 
@@ -93,6 +94,17 @@ function RevealSecretModal({
 
   }
     return (
+<form
+  onSubmit={(e) => {
+    e.preventDefault();
+    handleReveal();
+  }}
+>
+
+  {/* Vault Key input */}
+
+  {/* Reveal button */}
+
 
     <div className="modal-overlay">
 
@@ -119,6 +131,7 @@ function RevealSecretModal({
           </div>
 
           <button
+            type="button"
             className="icon-btn"
             onClick={onClose}
           >
@@ -128,7 +141,7 @@ function RevealSecretModal({
           </button>
 
         </div>
-
+          {!revealedSecret && (
         <div className="input-group">
 
           <label>
@@ -171,6 +184,7 @@ function RevealSecretModal({
           </div>
 
         </div>
+          )}
 
         {error && (
 
@@ -183,16 +197,12 @@ function RevealSecretModal({
         )}
 
         <button
-          className="primary-btn"
-          onClick={handleReveal}
-          disabled={loading}
-        >
-
-          {loading
-            ? "Revealing..."
-            : "Reveal Secret"}
-
-        </button>
+  type="submit"
+  className="primary-btn"
+  disabled={loading}
+>
+  {loading ? "Revealing..." : "Reveal Secret"}
+</button>
 
         {revealedSecret && (
 
@@ -241,6 +251,7 @@ function RevealSecretModal({
             </div>
 
             <button
+              type="button"
               className="secondary-btn"
               onClick={copySecret}
             >
@@ -259,10 +270,12 @@ function RevealSecretModal({
 
     </div>
 
+  </form>
+
   );
 
 }
 
 export default RevealSecretModal;
 
- 
+// </form>

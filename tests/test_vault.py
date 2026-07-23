@@ -15,9 +15,7 @@ def test_initialize_vault(client):
         },
     )
 
-    assert register.status_code == 200
-
-    vault_key = register.json()["generated_vault_key"]
+    assert register.status_code == 201
 
     # Login
     login = client.post(
@@ -31,7 +29,6 @@ def test_initialize_vault(client):
     assert login.status_code == 200
 
     token = login.json()["access_token"]
-
     headers = {"Authorization": f"Bearer {token}"}
 
     # Initialize Vault
@@ -39,11 +36,13 @@ def test_initialize_vault(client):
         "/vault/initialize",
         headers=headers,
         json={
-            "vault_key": vault_key,
+            "mode": "generated",
         },
     )
 
     assert response.status_code == 200
 
     body = response.json()
+
     assert body["message"] == "Vault initialized successfully."
+    assert body["generated_key"] is not None

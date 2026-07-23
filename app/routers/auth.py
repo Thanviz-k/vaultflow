@@ -19,6 +19,8 @@ router = APIRouter(
 
 @router.post(
     "/login",
+    summary="Login",
+    description="Authenticate an owner and return a JWT access token.",
     response_model=LoginResponse,
 )
 def login(

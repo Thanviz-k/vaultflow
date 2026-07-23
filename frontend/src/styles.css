@@ -600,26 +600,132 @@ button:disabled {
 
 
 /* ==================================================
-   SECRET CARDS
+   SECRET CARD
 ================================================== */
 
-.secret-card {
-  margin-bottom: 14px;
-  padding: 18px;
-
-  background: #eef0f1;
-
-  border: 1px solid #abb1b6;
-  border-left: 5px solid #646c73;
-  border-radius: 8px;
-
-  box-shadow:
-    0 5px 16px rgba(40, 45, 50, 0.1);
+.secret-list{
+    display:grid;
+    gap:20px;
 }
 
-.secret-card h3 {
-  margin-top: 0;
-  color: #343a3f;
+.secret-card{
+
+    background:#ffffff;
+
+    border:1px solid #E5E7EB;
+
+    border-left:6px solid #4F46E5;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    transition:.25s;
+
+    box-shadow:0 8px 25px rgba(0,0,0,.05);
+}
+
+.secret-card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:0 14px 35px rgba(0,0,0,.08);
+}
+
+.secret-card-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+}
+
+.secret-identity{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+}
+
+.secret-icon{
+
+    width:56px;
+    height:56px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    border-radius:14px;
+
+    background:#EEF2FF;
+
+    color:#4F46E5;
+
+    border:1px solid #C7D2FE;
+}
+
+.secret-label{
+
+    font-size:11px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+    color:#6B7280;
+}
+
+.secret-identity h3{
+
+    margin-top:4px;
+
+    margin-bottom:0;
+
+    font-size:22px;
+}
+
+.secret-divider{
+
+    margin:22px 0;
+
+    height:1px;
+
+    background:#E5E7EB;
+}
+
+.secret-metadata{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:18px;
+}
+
+.secret-metadata span{
+
+    display:block;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    color:#6B7280;
+
+    margin-bottom:6px;
+}
+
+.secret-metadata strong{
+
+    font-size:15px;
+
+    color:#111827;
 }
 
 
@@ -2082,21 +2188,22 @@ button:disabled {
 }
 
 
-.secret-icon {
-  width: 42px;
-  height: 42px;
+.secret-icon{
 
-  display: grid;
-  place-items: center;
+    width:56px;
+    height:56px;
 
-  background: #f7f5e9;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 
-  border: 1px solid #e3dcae;
-  border-radius: var(--radius-lg);
+    border-radius:14px;
 
-  color: var(--color-primary-dark);
+    background:#EEF2FF;
 
-  font-size: 18px;
+    color:#4F46E5;
+
+    border:1px solid #C7D2FE;
 }
 
 .secret-label {
@@ -2116,51 +2223,67 @@ button:disabled {
   font-size: 17px;
 }
 
-/* STATUS */
+.secret-status{
 
-.secret-status {
-  display: flex;
-  align-items: center;
+    display:flex;
 
-  gap: 6px;
+    align-items:center;
 
-  padding: 6px 9px;
+    gap:8px;
 
-  border-radius: var(--radius-md);
+    padding:8px 14px;
 
-  font-size: 9px;
-  font-weight: 800;
+    border-radius:999px;
 
-  letter-spacing: 0.7px;
+    font-size:12px;
+
+    font-weight:700;
 }
 
-.status-active {
-  background: #f8f4d9;
+.status-dot{
 
-  color: var(--color-primary-dark);
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
 }
 
-.status-expired {
-  background: #f1f1f1;
+.status-active{
 
-  color: var(--color-gray-500);
+    background:#DCFCE7;
+
+    color:#166534;
 }
 
-.status-revoked {
-  background: #fbeaea;
+.status-active .status-dot{
 
-  color: var(--color-error-dark);
+    background:#16A34A;
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
+.status-expired{
 
-  background: currentColor;
+    background:#FEE2E2;
 
-  border-radius: 50%;
+    color:#B91C1C;
 }
 
+.status-expired .status-dot{
+
+    background:#DC2626;
+}
+
+.status-revoked{
+
+    background:#FFEDD5;
+
+    color:#C2410C;
+}
+
+.status-revoked .status-dot{
+
+    background:#EA580C;
+}
 
 /* ==================================================
    SECRET DETAILS
@@ -4140,9 +4263,14 @@ NAVBAR
 }
 
 .secret-actions{
+
     display:flex;
-    gap:10px;
-    margin-top:18px;
+
+    flex-wrap:wrap;
+
+    gap:12px;
+
+    margin-top:22px;
 }
 
 .secret-actions button{
@@ -4153,19 +4281,24 @@ NAVBAR
 
     gap:8px;
 
-    padding:10px 16px;
-
-    border:none;
+    padding:10px 18px;
 
     border-radius:10px;
+
+    border:none;
 
     cursor:pointer;
 
     font-weight:600;
 
-    transition:.25s;
-
+    transition:.2s;
 }
+
+.secret-actions button:hover{
+
+    transform:translateY(-2px);
+}
+
 /* ==========================
 APP LAYOUT
 ========================== */
@@ -4658,4 +4791,129 @@ APP LAYOUT
 
     color:white;
 
+}
+/* Hide Microsoft Edge password reveal button */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+/* Hide Chrome/Edge autofill buttons */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-contacts-auto-fill-button {
+  display: none !important;
+}
+/* =====================================
+   MODAL
+===================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  z-index: 999;
+}
+
+.modal {
+  width: 450px;
+  max-width: 95%;
+
+  padding: 24px;
+
+  background: white;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.25);
+
+  animation: modalPop .2s ease;
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+.modal p {
+  color: #6b7280;
+  margin-bottom: 18px;
+}
+
+/* =====================================
+   VAULT KEY MODAL
+===================================== */
+
+.vault-modal input {
+  width: 100%;
+
+  padding: 14px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-actions button {
+  min-width: 110px;
+}
+.action-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    transition:.2s;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+.reveal-btn{
+    background:#DBEAFE;
+    color:#1D4ED8;
+}
+
+.edit-btn{
+    background:#EDE9FE;
+    color:#6D28D9;
+}
+
+.revoke-btn{
+    background:#FEF3C7;
+    color:#B45309;
+}
+
+.delete-btn{
+    background:#FEE2E2;
+    color:#B91C1C;
 }

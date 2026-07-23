@@ -3,13 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.dependencies.auth import get_current_owner
-
-from app.models.audit_log import AuditLog
-
-
 from app.models.owner import Owner
-from app.models.secret import Secret
-from app.schemas.audit import AuditResponse
+from app.schemas.audit import AuditLogResponse
+from app.services.audit_log_service import get_audit_logs
 
 router = APIRouter(
     prefix="/audit",
@@ -19,19 +15,16 @@ router = APIRouter(
 
 @router.get(
     "/",
-    response_model=list[AuditResponse],
+    summary="Get Audit Logs",
+    description="Retrieve the audit history of all secret operations performed by the authenticated user.",
+    response_model=list[AuditLogResponse],
 )
-def get_audit_logs(
+def list_audit_logs(
     db: Session = Depends(get_db),
-    current_owner: Owner = Depends(get_current_owner),
+    owner: Owner = Depends(get_current_owner),
 ):
-
-    logs = (
-        db.query(AuditLog)
-        .join(Secret)
-        .filter(Secret.owner_id == current_owner.id)
-        .order_by(AuditLog.timestamp.desc())
-        .all()
+    return get_audit_logs(
+        db=db,
+        owner_id=owner.id,
     )
 
-    return logs

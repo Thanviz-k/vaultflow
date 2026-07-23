@@ -1,6 +1,5 @@
 from logging.config import fileConfig
-
-from flask.cli import load_dotenv
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -12,8 +11,11 @@ import sys
 load_dotenv()
 
 from app.core.database import Base  # noqa: E402
+from app.models import Owner, Secret, AuditLog
 
 sys.path.append(os.getcwd())
+
+
 
 
 # this is the Alembic Config object, which provides
@@ -29,13 +31,19 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
+database_url = os.getenv("DATABASE_URL")
+
+if not database_url:
+    raise RuntimeError("DATABASE_URL is not set")
+
+config.set_main_option("sqlalchemy.url", database_url)
 
 
 def run_migrations_offline() -> None:

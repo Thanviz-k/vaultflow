@@ -1,12 +1,16 @@
-from pydantic import BaseModel, Field
 
+from typing import Literal
+from pydantic import BaseModel
 
 class VaultInitializeRequest(BaseModel):
-    vault_key: str = Field(
-        min_length=8,
-        max_length=128,
-    )
+    mode: Literal["generated", "custom"]
+    vault_key: str | None = None
 
 
 class VaultInitializeResponse(BaseModel):
+    generated_key: str | None = None
     message: str
+
+
+class VaultStatusResponse(BaseModel):
+    initialized: bool

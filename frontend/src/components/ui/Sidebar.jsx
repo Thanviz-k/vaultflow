@@ -1,8 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  KeyRound,
-  ChartColumn,
   Bot,
   Settings
 } from "lucide-react";
@@ -16,16 +14,6 @@ function Sidebar() {
     label: "Dashboard",
     icon: <LayoutDashboard size={20} />,
     path: "/dashboard",
-  },
-  {
-    label: "Secrets",
-    icon: <KeyRound size={20} />,
-    path: "/secrets",
-  },
-  {
-    label: "Analytics",
-    icon: <ChartColumn size={20} />,
-    path: "/reports",
   },
   {
     label: "AI Assistant",

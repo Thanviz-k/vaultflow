@@ -1,3 +1,6 @@
-from app.models.owner import Owner as Owner
-from app.models.secret import Secret as Secret
-from app.models.audit_log import AuditLog as AuditLog
+
+from .owner import Owner
+from .secret import Secret
+from .audit_log import AuditLog
+
+__all__ = ["Owner", "Secret", "AuditLog"]

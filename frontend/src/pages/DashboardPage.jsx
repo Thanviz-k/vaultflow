@@ -1,123 +1,243 @@
 import { useEffect, useState } from "react";
+import { Plus, Search } from "lucide-react";
 
 import AppLayout from "../layouts/AppLayout";
 
-import StatCard from "../components/ui/StatCard";
+import {
+  getMySecrets,
+  getVaultStatus,
+} from "../api";
 
-import { getDashboardStats } from "../api";
+import VaultSetupModal from "../components/vault/VaultSetupModal";
+import AIAgentCard from "../components/dashboard/AIAgentCard";
+import SecretCard from "../components/secrets/SecretCard";
+import SecretForm from "../components/SecretForm";
+
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+import Alert from "../components/ui/Alert";
 
 function DashboardPage({ token, onLogout }) {
 
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    expiring: 0,
-  });
+  const [secrets, setSecrets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [showVaultModal, setShowVaultModal] = useState(false);
+
+  const [filter, setFilter] = useState("All");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadStats();
+    initializeDashboard();
   }, []);
 
-  async function loadStats() {
-
+  async function initializeDashboard() {
     try {
 
-      const data =
-        await getDashboardStats(token);
+      const vaultStatus = await getVaultStatus(token);
 
-      setStats(data);
+      if (!vaultStatus.initialized) {
+        setShowVaultModal(true);
+      }
+
+      await loadSecrets();
 
     } catch (err) {
-
-      console.error(err);
-
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  async function loadSecrets() {
+    try {
+
+      const data = await getMySecrets(token);
+
+      setSecrets(data);
+
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function handleVaultInitialized() {
+    setShowVaultModal(false);
+    loadSecrets();
+  }
+
+  const filteredSecrets = secrets.filter((secret) => {
+
+    const statusMatch =
+      filter === "All"
+        ? true
+        : secret.status === filter;
+
+    const searchMatch =
+      secret.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+    return statusMatch && searchMatch;
+
+  });
+
+  if (loading) {
+    return (
+      <LoadingSpinner
+        text="Loading Dashboard..."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert type="error">
+        {error}
+      </Alert>
+    );
   }
 
   return (
+    <>
+      {showVaultModal && (
+        <VaultSetupModal
+          token={token}
+          onComplete={handleVaultInitialized}
+        />
+      )}
 
-    <AppLayout
-      title="Dashboard"
-      onLogout={onLogout}
-    >
+      <AppLayout
+        title="Dashboard"
+        onLogout={onLogout}
+      >
 
-      <div className="vault-stats">
+        <div className="page-header">
 
-  <StatCard
-    icon="🔐"
-    title="Total"
-    value={stats.total}
-  />
+          <div>
 
-  <StatCard
-    icon="✅"
-    title="Active"
-    value={stats.active}
-  />
+            <h1>Dashboard</h1>
 
-  <StatCard
-    icon="⏰"
-    title="Expiring"
-    value={stats.expiring}
-  />
+            <p>
+              Manage all your encrypted secrets.
+            </p>
 
-  <StatCard
-    icon="❌"
-    title="Revoked"
-    value={stats.revoked ?? 0}
-  />
+          </div>
 
-</div>
-
-      <div className="dashboard-grid">
-
-        <section className="dashboard-card">
-
-          <h2>
-            ⚡ Quick Actions
-          </h2>
-
-          <button className="action-btn">
-            ➕ Create Secret
+          <button
+            className="primary-btn"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus size={18} />
+            Create Secret
           </button>
 
-          <button className="action-btn">
-            📊 View Reports
-          </button>
+        </div>
 
-        </section>
+        <div className="search-box">
 
-        <section className="dashboard-card">
+          <Search size={18} />
 
-          <h2>
-            📜 Recent Activity
-          </h2>
+          <input
+            type="text"
+            placeholder="Search secrets..."
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+          />
 
-          <ul>
+        </div>
 
-            <li>
-              Secret Created
-            </li>
+        <div className="filter-tabs">
 
-            <li>
-              Secret Revealed
-            </li>
+          {[
+            "All",
+            "Active",
+            "Expired",
+            "Revoked",
+          ].map((item) => (
 
-            <li>
-              Secret Revoked
-            </li>
+            <button
+              key={item}
+              className={
+                filter === item
+                  ? "active"
+                  : ""
+              }
+              onClick={() =>
+                setFilter(item)
+              }
+            >
+              {item}
+            </button>
 
-          </ul>
+          ))}
 
-        </section>
+        </div>
+      <AIAgentCard />
+        {showCreate && (
 
-      </div>
+          <SecretForm
+            token={token}
+            onSuccess={() => {
+              setShowCreate(false);
+              loadSecrets();
+            }}
+            onCancel={() =>
+              setShowCreate(false)
+            }
+          />
 
-    </AppLayout>
+        )}
 
+        {filteredSecrets.length === 0 ? (
+
+          <div className="empty-state">
+
+            <h2>
+              No Secrets Found
+            </h2>
+
+            <p>
+              Create your first encrypted secret.
+            </p>
+
+            <button
+              className="primary-btn"
+              onClick={() =>
+                setShowCreate(true)
+              }
+            >
+              <Plus size={18} />
+              Create Secret
+            </button>
+
+          </div>
+
+        ) : (
+
+          <div className="secret-grid">
+
+            {filteredSecrets.map((secret) => (
+
+              <SecretCard
+                key={secret.id}
+                secret={secret}
+                token={token}
+                onRefresh={loadSecrets}
+              />
+
+            ))}
+
+          </div>
+
+        )}
+
+      </AppLayout>
+    </>
   );
-
 }
 
 export default DashboardPage;

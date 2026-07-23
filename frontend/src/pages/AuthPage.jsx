@@ -108,111 +108,40 @@ function AuthPage({ setToken }) {
 // =========================
 // REGISTER
 // =========================
-// =========================
-// REGISTER
-// =========================
+
 
 async function handleRegister(e) {
-
   e.preventDefault();
 
   setLoading(true);
-
   setError("");
 
   try {
-
-    const data = await createOwner(
-
+    await createOwner(
       name,
-
       email,
-
       password,
-
-      useCustomPhrase,
-
-      useCustomPhrase
-        ? customPhrase
-        : null,
-
+      useCustomPhrase ? "custom" : "generated"
     );
 
-    setUsedCustomPhrase(
-      data.use_custom_passphrase
-    );
-
-    // Generated Vault Key
-    if (!data.use_custom_passphrase) {
-
-      setVaultKey(
-        data.client_half
-      );
-
-      const blob = new Blob(
-        [data.client_half],
-        {
-          type: "text/plain",
-        }
-      );
-
-      const url =
-        URL.createObjectURL(blob);
-
-      const link =
-        document.createElement("a");
-
-      link.href = url;
-
-      link.download =
-        "vaultflow.key";
-
-      document.body.appendChild(
-        link
-      );
-
-      link.click();
-
-      link.remove();
-
-      URL.revokeObjectURL(url);
-
-    }
-
-    // Custom Vault Key
-    else {
-
-      setVaultKey("");
-
-    }
-
-    setRegistrationSuccess(true);
+    alert("Account created successfully! Please login.");
 
     setName("");
-
     setEmail("");
-
     setPassword("");
-
     setCustomPhrase("");
+    setUseCustomPhrase(false);
 
-  }
+    setIsRegister(false);
 
-  catch (err) {
-
-    setError(
-      err.message
-    );
-
-  }
-
-  finally {
-
+  } catch (err) {
+    setError(err.message);
+  } finally {
     setLoading(false);
-
   }
-
 }
+
+    
   // =========================
   // HELPERS
   // =========================

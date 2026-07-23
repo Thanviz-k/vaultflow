@@ -6,7 +6,7 @@ from app.services.key_service import (
     initialize_vault,
 )
 from app.core.logger import logger
-
+from app.models.secret import Secret
 
 def initialize_owner_vault(
     db: Session,
@@ -43,3 +43,51 @@ def initialize_owner_vault(
     )
 
     return owner
+
+
+
+def reset_owner_vault(
+    db: Session,
+    owner: Owner,
+) -> Owner:
+    """
+    Reset the owner's vault.
+
+    Deletes all secrets and clears vault initialization.
+    """
+
+    db.query(Secret).filter(
+        Secret.owner_id == owner.id
+    ).delete()
+
+    owner.vault_salt = None
+    owner.server_half = None
+    owner.key_hash = None
+    owner.vault_initialized = False
+
+    db.commit()
+    db.refresh(owner)
+
+    logger.info(
+        "Vault reset for owner %s",
+        owner.email,
+    )
+
+    return owner
+
+
+def get_vault_status(
+    db: Session,
+    owner_id: int,
+) -> bool:
+
+    owner = (
+        db.query(Owner)
+        .filter(Owner.id == owner_id)
+        .first()
+    )
+
+    if owner is None:
+        raise ValueError("Owner not found")
+
+    return owner.vault_initialized

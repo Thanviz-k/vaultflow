@@ -1,161 +1,273 @@
 import { useState } from "react";
-import { Eye, Pencil, Ban } from "lucide-react";
+import {Eye,Pencil,Ban,Trash2,KeyRound,Shield,Database,Globe,Lock,} from "lucide-react";
 
-import { revokeSecret } from "../../api";
-
+import {revokeSecret,deleteSecret,} from "../../api";
+import VaultKeyModal from "../dashboard/VaultKeyModal";
 import RevealSecretModal from "./RevealSecretModal";
-import SecretForm from "../SecretForm";
+import EditSecretModal from "./EditSecretModal";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import toast from "react-hot-toast";
+import { formatDate } from "../../utils/formatDate";
 
 function SecretCard({
-
   secret,
-
   token,
-
-  refresh,
-
+  onRefresh,
 }) {
-
   const [showReveal, setShowReveal] = useState(false);
-
   const [showEdit, setShowEdit] = useState(false);
-
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showVaultKey, setShowVaultKey] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+const [showDeleteVaultKey, setShowDeleteVaultKey] = useState(false);
 
-  async function handleRevoke() {
+  async function handleRevoke(vaultKey) {
+  try {
+    await revokeSecret(
+      secret.id,
+      vaultKey,
+      token
+    );
 
+    setShowVaultKey(false);
+    setShowConfirm(false);
+
+    onRefresh();
+
+  } catch (err) {
+    toast.error(err.message);
+  }
+}
+
+async function handleDelete(vaultKey) {
     try {
+        await deleteSecret(
+            secret.id,
+            vaultKey,
+            token,
+        );
 
-      await revokeSecret(
-        secret.id,
-        token
-      );
+        setShowDeleteVaultKey(false);
+        setShowDeleteConfirm(false);
 
-      setShowConfirm(false);
-
-      refresh();
+        onRefresh();
 
     } catch (err) {
-
-      alert(err.message);
-
+        toast.error(err.message);
     }
+}
+function getSecretIcon(type = "") {
+  switch (type.toLowerCase()) {
+    case "password":
+      return <KeyRound size={24} />;
 
+    case "api":
+    case "api key":
+      return <Shield size={24} />;
+
+    case "database":
+      return <Database size={24} />;
+
+    case "website":
+      return <Globe size={24} />;
+
+    default:
+      return <Lock size={24} />;
   }
+}
 
-  return (
+return (
+  <>
+    <div className="secret-card">
 
-    <>
+      <div className="secret-card-top">
 
-      <div className="secret-card">
+        <div className="secret-identity">
 
-        <div className="secret-header">
+          <div className="secret-icon">
+            <Lock size={24} />
+            </div>
 
           <div>
+            <span className="secret-label">
+              SECRET
+            </span>
 
-            <h3>
-
-              {secret.name}
-
-            </h3>
-
-            <p>
-
-              Expires: {secret.expires_at}
-
-            </p>
-
+            <h3>{secret.name}</h3>
           </div>
-
-          <span
-            className={`status-badge ${secret.status?.toLowerCase()}`}
-          >
-
-            {secret.status}
-
-          </span>
 
         </div>
 
-        <div className="secret-actions">
-
-          <button
-            onClick={() => setShowReveal(true)}
-          >
-
-            <Eye size={18} />
-
-            Reveal
-
-          </button>
-
-          <button
-            onClick={() => setShowEdit(true)}
-          >
-
-            <Pencil size={18} />
-
-            Edit
-
-          </button>
-
-          <button
-            onClick={() => setShowConfirm(true)}
-          >
-
-            <Ban size={18} />
-
-            Revoke
-
-          </button>
-
+        <div
+          className={`secret-status status-${secret.status?.toLowerCase()}`}
+        >
+          <span className="status-dot"></span>
+          {secret.status}
         </div>
 
       </div>
 
-      {showReveal && (
+      <div className="secret-divider"></div>
 
-        <RevealSecretModal
-          token={token}
-          secret={secret}
-          onClose={() => setShowReveal(false)}
-        />
+      <div className="secret-metadata">
 
-      )}
+        <div>
+          <span>EXPIRES</span>
+          <strong>{formatDate(secret.expires_at)}</strong>
+        </div>
 
-      {showEdit && (
+        <div>
+          <span>CREATED</span>
+          <strong>
+            {secret.created_at
+              ? formatDate(secret.created_at)
+              : "Unknown"}
+          </strong>
+        </div>
 
-        <SecretForm
-          token={token}
-          secret={secret}
-          onSuccess={() => {
+      </div>
 
-            setShowEdit(false);
+      <div className="secret-actions">
 
-            refresh();
+        {/* Reveal */}
+
+        <button
+          className="action-btn reveal-btn"
+          disabled={secret.status?.toLowerCase() === "revoked"}
+          onClick={() => {
+
+            if (secret.status?.toLowerCase() === "revoked") {
+              toast.error(
+                "This secret has been revoked."
+              );
+              return;
+            }
+
+            setShowReveal(true);
 
           }}
-          onCancel={() => setShowEdit(false)}
-        />
+        >
+          <Eye size={18} />
+          Reveal
+        </button>
 
-      )}
+        {/* Edit */}
 
-      {showConfirm && (
+        <button
+          className="action-btn edit-btn"
+          disabled={secret.status?.toLowerCase() === "revoked"}
+          onClick={() => {
 
-        <ConfirmDialog
-          title="Revoke Secret"
-          message="Are you sure you want to revoke this secret?"
-          onConfirm={handleRevoke}
-          onCancel={() => setShowConfirm(false)}
-        />
+            if (secret.status?.toLowerCase() === "revoked") {
+              toast.error(
+                "Revoked secrets cannot be edited."
+              );
+              return;
+            }
 
-      )}
+            setShowEdit(true);
 
-    </>
+          }}
+        >
+          <Pencil size={18} />
+          Edit
+        </button>
 
-  );
+        {/* Revoke */}
 
+        <button
+          className="action-btn revoke-btn"
+          disabled={secret.status?.toLowerCase() === "revoked"}
+          onClick={() => {
+
+            if (secret.status?.toLowerCase() === "revoked") {
+              toast.error("Already revoked.");
+              return;
+            }
+
+            setShowConfirm(true);
+
+          }}
+        >
+          <Ban size={18} />
+          Revoke
+        </button>
+
+        {/* Delete */}
+
+        <button
+          className="action-btn delete-btn"
+          onClick={() => setShowDeleteConfirm(true)}
+        >
+          <Trash2 size={18} />
+          Delete
+        </button>
+
+      </div>
+
+    </div>
+
+    {showReveal && (
+      <RevealSecretModal
+        token={token}
+        secret={secret}
+        onClose={() => setShowReveal(false)}
+      />
+    )}
+
+    {showEdit && (
+      <EditSecretModal
+        secret={secret}
+        token={token}
+        onClose={() => setShowEdit(false)}
+        onSuccess={() => {
+          setShowEdit(false);
+          onRefresh();
+        }}
+      />
+    )}
+
+    {showConfirm && (
+      <ConfirmDialog
+        title="Revoke Secret"
+        message="Are you sure you want to revoke this secret?"
+        onConfirm={() => {
+          setShowConfirm(false);
+          setShowVaultKey(true);
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
+    )}
+
+    {showDeleteVaultKey && (
+      <VaultKeyModal
+        title="Delete Secret"
+        onSubmit={handleDelete}
+        onCancel={() => setShowDeleteVaultKey(false)}
+      />
+    )}
+
+    {showVaultKey && (
+      <VaultKeyModal
+        title="Verify Vault Key"
+        onSubmit={handleRevoke}
+        onCancel={() => setShowVaultKey(false)}
+      />
+    )}
+
+    {showDeleteConfirm && (
+      <ConfirmDialog
+        title="Delete Secret"
+        message="This action is permanent. Continue?"
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          setShowDeleteVaultKey(true);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    )}
+  </>
+);
 }
 
 export default SecretCard;

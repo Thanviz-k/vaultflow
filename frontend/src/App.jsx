@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import {
   Navigate,
   Route,
@@ -13,29 +12,14 @@ import SecretsPage from "./pages/SecretsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
 
-
-
 function App() {
-  /*
-    Load token from sessionStorage.
-
-    This keeps the user logged in when the page
-    is refreshed in the same browser tab/session.
-  */
 
   const [token, setTokenState] = useState(
-    () =>
-      sessionStorage.getItem(
-        "vaultflow_token"
-      ) || ""
+    () => sessionStorage.getItem("vaultflow_token") || ""
   );
 
-
-  /*
-    Save token after successful login.
-  */
-
   function setToken(newToken) {
+
     setTokenState(newToken);
 
     if (newToken) {
@@ -48,24 +32,18 @@ function App() {
         "vaultflow_token"
       );
     }
+
   }
-
-
-  /*
-    Logout:
-    1. Clear React state
-    2. Remove stored token
-  */
 
   function handleLogout() {
     setToken("");
   }
 
-
   return (
+
     <Routes>
 
-      {/* LOGIN / REGISTER */}
+      {/* LOGIN */}
 
       <Route
         path="/"
@@ -82,7 +60,6 @@ function App() {
           )
         }
       />
-
 
       {/* DASHBOARD */}
 
@@ -103,17 +80,18 @@ function App() {
         }
       />
 
+      
 
-      {/* REPORTS */}
+      {/* AI ASSISTANT */}
 
       <Route
-        path="/reports"
+        path="/ai"
         element={
           token ? (
-            <ReportsPage
-    token={token}
-    onLogout={handleLogout}
-/>
+            <AIAssistantPage
+              token={token}
+              onLogout={handleLogout}
+            />
           ) : (
             <Navigate
               to="/"
@@ -123,57 +101,26 @@ function App() {
         }
       />
 
-      <Route
-  path="/ai"
-  element={
-    token ? (
-      <AIAssistantPage
-        token={token}
-        onLogout={handleLogout}
-      />
-    ) : (
-      <Navigate
-        to="/"
-        replace
-      />
-    )
-  }
-/>
+      
+
+      {/* SETTINGS */}
 
       <Route
-  path="/secrets"
-  element={
-    token ? (
-      <SecretsPage
-    token={token}
-    onLogout={handleLogout}
-/>) : (
-      <Navigate
-        to="/"
-        replace
+        path="/settings"
+        element={
+          token ? (
+            <SettingsPage
+              token={token}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate
+              to="/"
+              replace
+            />
+          )
+        }
       />
-    )
-  }
-/>
-
-
-<Route
-  path="/settings"
-  element={
-    token ? (
-      <SettingsPage
-        token={token}
-        onLogout={handleLogout}
-      />
-    ) : (
-      <Navigate
-        to="/"
-        replace
-      />
-    )
-  }
-/>
-
 
       {/* UNKNOWN ROUTES */}
 
@@ -181,21 +128,16 @@ function App() {
         path="*"
         element={
           <Navigate
-            to={
-              token
-                ? "/dashboard"
-                : "/"
-            }
+            to={token ? "/dashboard" : "/"}
             replace
           />
         }
       />
 
     </Routes>
+
   );
+
 }
-
-
-
 
 export default App;

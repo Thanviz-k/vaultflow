@@ -15,15 +15,18 @@ from app.schemas.owner import (
 
 from app.services.owner_service import create_owner
 
+
 router = APIRouter(
     prefix="/owners",
     tags=["Owners"],
 )
 
-
 @router.post(
     "/register",
+    summary="Register Owner",
+    description="Create a new owner account using a name, email, and password.",
     response_model=OwnerCreateResponse,
+    status_code=201,
 )
 def create_owner_endpoint(
     payload: OwnerCreateRequest,
@@ -34,13 +37,11 @@ def create_owner_endpoint(
     if existing_owner:
         raise ValidationError("Email already registered")
 
-    owner, generated_vault_key = create_owner(
+    owner = create_owner(
         db=db,
         name=payload.name,
         email=str(payload.email),
         password=payload.password,
-        mode=payload.mode,
-        vault_key=payload.vault_key,
     )
 
     logger.info(
@@ -49,6 +50,6 @@ def create_owner_endpoint(
     )
 
     return OwnerCreateResponse(
-        owner=OwnerInfo.model_validate(owner),
-        generated_vault_key=generated_vault_key,
-    )
+    owner=OwnerInfo.model_validate(owner),
+    generated_vault_key=None,
+)

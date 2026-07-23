@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from app.core.config import settings
-
+from app.routers import audit
 from app.routers import (
     auth,
     owners,
@@ -108,7 +108,7 @@ app.add_exception_handler(
     Exception,
     generic_exception_handler,
 )
-
+app.include_router(audit.router)
 
 # Health check endpoint
 @app.get("/health")

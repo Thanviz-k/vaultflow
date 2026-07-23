@@ -10,7 +10,14 @@ class AuditLog(Base):
     __tablename__ = "audit_log"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    secret_id = Column(UUID(as_uuid=True), ForeignKey("secrets.id"), nullable=False)
+    secret_id = Column(
+    UUID(as_uuid=True),
+    ForeignKey(
+        "secrets.id",
+        ondelete="CASCADE",
+    ),
+    nullable=False,
+)
     action = Column(String, nullable=False)
     timestamp = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -18,3 +25,7 @@ class AuditLog(Base):
     metadata_ = Column("metadata", JSONB, nullable=True)
 
     secret = relationship("Secret", back_populates="audit_logs")
+    secret_name = Column(
+    String,
+    nullable=True,
+)
