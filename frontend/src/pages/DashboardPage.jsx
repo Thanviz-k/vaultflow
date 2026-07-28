@@ -69,13 +69,13 @@ function DashboardPage({ token, onLogout }) {
 
   const counts = {
     All: secrets.length,
-    Active: secrets.filter((s) => s.status === "Active").length,
-    Expired: secrets.filter((s) => s.status === "Expired").length,
-    Revoked: secrets.filter((s) => s.status === "Revoked").length,
+    Active: secrets.filter((s) => s.status?.toLowerCase() === "active").length,
+    Expired: secrets.filter((s) => s.status?.toLowerCase() === "expired").length,
+    Revoked: secrets.filter((s) => s.status?.toLowerCase() === "revoked").length,
   };
 
   const filteredSecrets = secrets.filter((secret) => {
-    const statusMatch = filter === "All" ? true : secret.status === filter;
+    const statusMatch = filter === "All" ? true : secret.status?.toLowerCase() === filter.toLowerCase();
 
     const query = search.trim().toLowerCase();
     const searchMatch =
