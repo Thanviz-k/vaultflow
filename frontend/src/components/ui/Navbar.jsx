@@ -2,7 +2,8 @@ import { useNavigate } from "react-router-dom";
 import {
   LogOut,
   Bell,
-  UserCircle
+  UserCircle,
+  Sparkles
 } from "lucide-react";
 
 function Navbar({ title, onLogout }) {
@@ -20,6 +21,16 @@ function Navbar({ title, onLogout }) {
       </div>
 
       <div className="navbar-actions">
+
+        <button
+          className="btn btn-icon"
+          title="AI Assistant"
+          onClick={() => navigate("/ai-assistant")}
+        >
+
+          <Sparkles size={20} />
+
+        </button>
 
         <button className="btn btn-icon">
 
