@@ -332,3 +332,15 @@ export async function getMyProfile(token) {
   return parseResponse(response);
 }
 
+// FORCE RESET VAULT (Forgot Vault Key — no key verification, wipes everything)
+
+export async function forceResetVault(token) {
+  const response = await fetch(`${BASE_URL}/vault/force-reset`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse(response);
+}

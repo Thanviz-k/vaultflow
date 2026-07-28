@@ -1,39 +1,36 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import { createSecret } from "../api";
 
 function SecretForm({ token, onSuccess, onCancel }) {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
-  const [vaultKey, setVaultKey] = useState("");
   const [expiresInDays, setExpiresInDays] = useState("30");
-
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e) {
+  const [showVaultKeyPrompt, setShowVaultKeyPrompt] = useState(false);
+
+  function handleSubmit(e) {
     e.preventDefault();
-
-    setLoading(true);
     setError("");
+    // Name/value/expiry are ready — now ask for the Vault Key in a
+    // separate popup before actually creating the secret.
+    setShowVaultKeyPrompt(true);
+  }
 
-    try {
-      const expiry =
-        expiresInDays === "No-expire" ? null : Number(expiresInDays);
+  async function handleVaultKeyConfirm(vaultKey) {
+    const expiry =
+      expiresInDays === "No-expire" ? null : Number(expiresInDays);
 
-      await createSecret(name, value, vaultKey, expiry, token);
+    await createSecret(name, value, vaultKey, expiry, token);
 
-      setName("");
-      setValue("");
-      setVaultKey("");
-      setExpiresInDays("30");
+    setName("");
+    setValue("");
+    setExpiresInDays("30");
+    setShowVaultKeyPrompt(false);
 
-      if (onSuccess) {
-        await onSuccess();
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (onSuccess) {
+      await onSuccess();
     }
   }
 
@@ -42,7 +39,6 @@ function SecretForm({ token, onSuccess, onCancel }) {
       <div className="card-header">
         <h2 className="card-title">Create Secret</h2>
       </div>
-
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Secret Name</label>
@@ -54,7 +50,6 @@ function SecretForm({ token, onSuccess, onCancel }) {
             required
           />
         </div>
-
         <div className="form-group">
           <label>Secret Value</label>
           <input
@@ -67,20 +62,6 @@ function SecretForm({ token, onSuccess, onCancel }) {
             autoComplete="off"
           />
         </div>
-
-        <div className="form-group">
-          <label>Vault Key</label>
-          <input
-            type="password"
-            className="input"
-            value={vaultKey}
-            onChange={(e) => setVaultKey(e.target.value)}
-            placeholder="Enter your Vault Key"
-            required
-            autoComplete="off"
-          />
-        </div>
-
         <div className="form-group">
           <label>Expiry</label>
           <select
@@ -95,9 +76,7 @@ function SecretForm({ token, onSuccess, onCancel }) {
             <option value="30">30 Days</option>
           </select>
         </div>
-
         {error && <p className="alert alert-danger">{error}</p>}
-
         <div className="modal-footer" style={{ padding: 0, borderTop: "none" }}>
           {onCancel && (
             <button
@@ -108,12 +87,93 @@ function SecretForm({ token, onSuccess, onCancel }) {
               Cancel
             </button>
           )}
-
-          <button type="submit" className="btn create-btn" disabled={loading}>
-            {loading ? "Creating..." : "Create Secret"}
+          <button type="submit" className="btn create-btn">
+            Create Secret
           </button>
         </div>
       </form>
+
+      {showVaultKeyPrompt && (
+        <VaultKeyPromptModal
+          onConfirm={handleVaultKeyConfirm}
+          onClose={() => setShowVaultKeyPrompt(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Popup shown only after the main Create Secret form is submitted.
+// Asking for the Vault Key here (rather than inline in the form) keeps
+// it visually and mentally separate from the secret's own name/value.
+function VaultKeyPromptModal({ onConfirm, onClose }) {
+  const [vaultKey, setVaultKey] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (!vaultKey.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await onConfirm(vaultKey);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <div>
+            <h2>Enter Vault Key</h2>
+            <p>Your Vault Key is required to encrypt this secret.</p>
+          </div>
+          <button type="button" className="icon-btn" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label>Vault Key</label>
+              <input
+                type="password"
+                className="input"
+                value={vaultKey}
+                onChange={(e) => setVaultKey(e.target.value)}
+                placeholder="Enter your Vault Key"
+                autoComplete="off"
+                autoFocus
+                required
+              />
+            </div>
+
+            {error && <p className="alert alert-danger">{error}</p>}
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn create-btn"
+              disabled={loading || !vaultKey.trim()}
+            >
+              {loading ? "Creating..." : "Create Secret"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

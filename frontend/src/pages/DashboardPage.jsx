@@ -7,7 +7,6 @@ import { getMySecrets, getVaultStatus } from "../api";
 import { exportSecretsAsMarkdown } from "../utils/exportSecretsMarkdown";
 
 import VaultSetupModal from "../components/vault/VaultSetupModal";
-import AIAgentCard from "../components/dashboard/AIAgentCard";
 import SecretCard from "../components/secrets/SecretCard";
 import SecretForm from "../components/SecretForm";
 
@@ -131,8 +130,6 @@ function DashboardPage({ token, onLogout }) {
               </div>
             ))}
           </div>
-
-          <AIAgentCard />
 
           <div className="toolbar">
             <div className="toolbar-left">

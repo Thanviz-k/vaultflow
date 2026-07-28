@@ -122,3 +122,30 @@ def reset_vault(
         )
     }
 
+@router.post(
+    "/force-reset",
+    summary="Force Reset Vault (Forgot Vault Key)",
+    description=(
+        "Permanently delete all secrets and reset the vault WITHOUT verifying "
+        "the current Vault Key. Used only when the owner has forgotten their "
+        "Vault Key and cannot use /vault/reset. Requires an authenticated "
+        "session; the vault key itself is never checked."
+    ),
+)
+def force_reset_vault(
+    db: Session = Depends(get_db),
+    owner: Owner = Depends(get_current_owner),
+):
+    # No verify_owner_vault_key call here — that's the whole point.
+    # Login (JWT) is the only proof of identity available when the
+    # vault key itself is lost.
+    reset_owner_vault(
+        db=db,
+        owner=owner,
+    )
+    return {
+        "message": (
+            "Vault force-reset successfully. All previous secrets have been "
+            "permanently deleted. Initialize your vault again to set a new Vault Key."
+        )
+    }

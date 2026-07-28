@@ -163,12 +163,13 @@ def run_natural_language_query(
 
     intent = _parse_intent(raw_response)
 
-    # Greetings never touch the database.
+    # Greetings never touch the database. `result` must still be a
+    # dict (not None) — the response model requires it.
     if intent.get("action") == "greeting":
         return {
-            "answer": _build_answer(intent, None),
+            "answer": _build_answer(intent, {}),
             "intent": intent,
-            "result": None,
+            "result": {},
         }
 
     # Start with ONLY this owner's secrets

@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   KeyRound,
   AlertTriangle,
+  HelpCircle,
   X,
 } from "lucide-react";
 
@@ -15,7 +16,7 @@ import VaultSetupModal from "../components/vault/VaultSetupModal";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Alert from "../components/ui/Alert";
 
-import { getMyProfile, resetVault } from "../api";
+import { getMyProfile, resetVault, forceResetVault } from "../api";
 import { formatDate } from "../utils/formatDate";
 
 function ProfilePage({ token, onLogout }) {
@@ -24,6 +25,7 @@ function ProfilePage({ token, onLogout }) {
   const [error, setError] = useState("");
 
   const [showChangeKey, setShowChangeKey] = useState(false);
+  const [showForgotKey, setShowForgotKey] = useState(false);
   const [showVaultSetup, setShowVaultSetup] = useState(false);
 
   useEffect(() => {
@@ -137,7 +139,17 @@ function ProfilePage({ token, onLogout }) {
             </span>
           </div>
 
-          <div className="modal-footer" style={{ padding: 0, borderTop: "none", justifyContent: "flex-start", marginTop: 20 }}>
+          <div
+            className="modal-footer"
+            style={{
+              padding: 0,
+              borderTop: "none",
+              justifyContent: "flex-start",
+              marginTop: 20,
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
             <button
               className="btn btn-danger"
               onClick={() => setShowChangeKey(true)}
@@ -145,6 +157,15 @@ function ProfilePage({ token, onLogout }) {
             >
               <KeyRound size={18} />
               Change Vault Key
+            </button>
+
+            <button
+              className="btn btn-outline"
+              onClick={() => setShowForgotKey(true)}
+              disabled={!profile.vault_initialized}
+            >
+              <HelpCircle size={18} />
+              Forgot Vault Key?
             </button>
           </div>
 
@@ -168,6 +189,17 @@ function ProfilePage({ token, onLogout }) {
         />
       )}
 
+      {showForgotKey && (
+        <ForgotVaultKeyModal
+          token={token}
+          onClose={() => setShowForgotKey(false)}
+          onConfirmed={() => {
+            setShowForgotKey(false);
+            setShowVaultSetup(true);
+          }}
+        />
+      )}
+
       {showVaultSetup && (
         <VaultSetupModal
           token={token}
@@ -178,6 +210,8 @@ function ProfilePage({ token, onLogout }) {
   );
 }
 
+// Used when the owner KNOWS their current Vault Key and wants to rotate it.
+// Requires the current key as proof before wiping.
 function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
   const [vaultKey, setVaultKey] = useState("");
   const [confirmText, setConfirmText] = useState("");
@@ -257,6 +291,103 @@ function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
                 placeholder={CONFIRM_PHRASE}
                 autoComplete="off"
                 required
+              />
+            </div>
+
+            {error && <p className="alert alert-danger">{error}</p>}
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn btn-outline" onClick={onClose}>
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className="btn btn-danger"
+              disabled={!canSubmit || loading}
+            >
+              {loading ? "Deleting Secrets..." : "Delete Secrets & Continue"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Used when the owner does NOT remember their current Vault Key.
+// There is no field to enter it — verification against a key you don't
+// remember is impossible. The only safe action is a full wipe, gated by
+// the owner's authenticated session (JWT) plus a typed confirm phrase.
+function ForgotVaultKeyModal({ token, onClose, onConfirmed }) {
+  const [confirmText, setConfirmText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const CONFIRM_PHRASE = "DELETE MY SECRETS";
+  const canSubmit = confirmText === CONFIRM_PHRASE;
+
+  async function handleConfirm(e) {
+    e.preventDefault();
+
+    if (!canSubmit) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await forceResetVault(token);
+      onConfirmed();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <div>
+            <h2>
+              <HelpCircle size={22} style={{ marginRight: 8, verticalAlign: "middle" }} />
+              Forgot Vault Key
+            </h2>
+            <p>
+              Since you don't remember your Vault Key, it can't be verified.
+              The only option is to wipe your vault and set a new key.
+            </p>
+          </div>
+          <button type="button" className="icon-btn" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleConfirm}>
+          <div className="modal-body">
+            <div className="alert alert-danger">
+              <span>❌</span>
+              <span>
+                This action cannot be undone. Every secret in your vault will
+                be permanently and irreversibly deleted the moment you
+                confirm, and there is no way to recover them afterward.
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label>
+                Type <strong>{CONFIRM_PHRASE}</strong> to confirm
+              </label>
+              <input
+                className="input"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={CONFIRM_PHRASE}
+                autoComplete="off"
+                required
+                autoFocus
               />
             </div>
 
