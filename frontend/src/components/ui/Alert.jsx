@@ -6,10 +6,12 @@ function Alert({
 
 }) {
 
+  const cssType = type === "error" ? "danger" : type;
+
   return (
 
     <div
-      className={`alert alert-${type}`}
+      className={`alert alert-${cssType}`}
     >
 
       <span>

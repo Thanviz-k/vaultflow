@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X, Pencil } from "lucide-react";
 import { updateSecret } from "../../api";
 
 function EditSecretModal({
@@ -47,77 +48,97 @@ function EditSecretModal({
   return (
     <div className="modal-overlay">
       <div className="modal">
-
-        <h2>Edit Secret</h2>
+        <div className="modal-header">
+          <div>
+            <h2>
+              <Pencil size={20} style={{ marginRight: 8, verticalAlign: "middle" }} />
+              Edit Secret
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+          >
+            <X size={20} />
+          </button>
+        </div>
 
         <form onSubmit={handleUpdate}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label>Secret Name</label>
+              <input
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Secret Name"
+                required
+              />
+            </div>
 
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Secret Name"
-            required
-          />
+            <div className="form-group">
+              <label>New Secret Value</label>
+              <input
+                type="password"
+                className="input"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="New Secret Value"
+                autoComplete="off"
+                required
+              />
+            </div>
 
-          <input
-            type="password"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="New Secret Value"
-            required
-          />
+            <div className="form-group">
+              <label>Vault Key</label>
+              <input
+                type="password"
+                className="input"
+                value={vaultKey}
+                onChange={(e) => setVaultKey(e.target.value)}
+                placeholder="Enter your Vault Key"
+                autoComplete="off"
+                required
+              />
+            </div>
 
-          <input
-            type="password"
-            value={vaultKey}
-            onChange={(e) => setVaultKey(e.target.value)}
-            placeholder="Vault Key"
-            required
-          />
+            <div className="form-group">
+              <label>Expiry</label>
+              <select
+                className="input"
+                value={expiresInDays}
+                onChange={(e) => setExpiresInDays(e.target.value)}
+              >
+                <option value="No-expire">No Expiry</option>
+                <option value="1">1 Day</option>
+                <option value="7">7 Days</option>
+                <option value="15">15 Days</option>
+                <option value="30">30 Days</option>
+              </select>
+            </div>
 
-          <select
-            value={expiresInDays}
-            onChange={(e) => setExpiresInDays(e.target.value)}
-          >
-            <option value="No-expire">No Expiry</option>
-            <option value="1">1 Day</option>
-            <option value="7">7 Days</option>
-            <option value="15">15 Days</option>
-            <option value="30">30 Days</option>
-          </select>
+            {error && <p className="alert alert-danger">{error}</p>}
+          </div>
 
-          {error && (
-            <p style={{ color: "red" }}>
-              {error}
-            </p>
-          )}
-
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginTop: "15px",
-            }}
-          >
-            <button
-              type="submit"
-              disabled={loading}
-            >
-              {loading
-                ? "Updating..."
-                : "Update Secret"}
-            </button>
-
+          <div className="modal-footer">
             <button
               type="button"
+              className="btn btn-outline"
               onClick={onClose}
             >
               Cancel
             </button>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Secret"}
+            </button>
           </div>
-
         </form>
-
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ class OwnerInfo(BaseModel):
     name: str
     email: EmailStr
     created_at: datetime
+    vault_initialized: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

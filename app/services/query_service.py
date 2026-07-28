@@ -36,6 +36,67 @@ Examples:
 """
 
 
+def _parse_intent(raw_response: str) -> dict:
+    """
+    The model is asked to return raw JSON, but sometimes wraps it in a
+    ```json ... ``` code fence anyway. Strip that before parsing, and fall
+    back to a safe default instead of blowing up the whole request if the
+    model returns something unparsable.
+    """
+
+    text = raw_response.strip()
+
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.lower().startswith("json"):
+            text = text[4:]
+        text = text.strip()
+
+    try:
+        intent = json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        intent = {
+            "action": "list_secrets",
+            "status_filter": None,
+            "expiring_within_days": None,
+        }
+
+    intent.setdefault("action", "list_secrets")
+    intent.setdefault("status_filter", None)
+    intent.setdefault("expiring_within_days", None)
+
+    return intent
+
+
+def _build_answer(intent: dict, result: dict) -> str:
+    """Turn the structured intent/result into a short natural-language reply."""
+
+    status = intent.get("status_filter")
+    days = intent.get("expiring_within_days")
+
+    scope = f"{status} " if status else ""
+    if days is not None:
+        scope += f"expiring within {days} day(s) "
+
+    if intent.get("action") == "count_secrets":
+        count = result["count"]
+        noun = "secret" if count == 1 else "secrets"
+        return f"You have {count} {scope}{noun}.".replace("  ", " ")
+
+    secrets_list = result["secrets"]
+
+    if not secrets_list:
+        return f"No {scope}secrets found.".replace("  ", " ")
+
+    lines = [f"Found {len(secrets_list)} {scope}secret(s):".replace("  ", " ")]
+
+    for secret in secrets_list:
+        expiry = secret["expires_at"] or "no expiry"
+        lines.append(f"• {secret['name']} — {secret['status']} (expires: {expiry})")
+
+    return "\n".join(lines)
+
+
 def run_natural_language_query(
     db: Session,
     question: str,
@@ -47,7 +108,7 @@ def run_natural_language_query(
         question,
     )
 
-    intent = json.loads(raw_response)
+    intent = _parse_intent(raw_response)
 
     # Start with ONLY this owner's secrets
 
@@ -77,10 +138,12 @@ def run_natural_language_query(
 
     if intent.get("action") == "count_secrets":
         count = query.count()
+        result = {"count": count}
 
         return {
+            "answer": _build_answer(intent, result),
             "intent": intent,
-            "result": {"count": count},
+            "result": result,
         }
 
     # LIST
@@ -99,7 +162,10 @@ def run_natural_language_query(
         for secret in results
     ]
 
+    result = {"secrets": secrets_list}
+
     return {
+        "answer": _build_answer(intent, result),
         "intent": intent,
-        "result": {"secrets": secrets_list},
+        "result": result,
     }

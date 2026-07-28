@@ -303,3 +303,32 @@ export async function getVaultStatus(token) {
   return parseResponse(response);
 }
 
+// RESET VAULT (required before setting a new Vault Key — wipes all secrets)
+
+export async function resetVault(vaultKey, token) {
+  const response = await fetch(`${BASE_URL}/vault/reset`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      vault_key: vaultKey,
+    }),
+  });
+
+  return parseResponse(response);
+}
+
+// OWNER PROFILE
+
+export async function getMyProfile(token) {
+  const response = await fetch(`${BASE_URL}/owners/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return parseResponse(response);
+}
+

@@ -7,19 +7,15 @@ from app.models.owner import Owner
 from app.schemas.vault import (
     VaultInitializeRequest,
     VaultInitializeResponse,
+    VaultResetRequest,
+    VaultStatusResponse,
 )
-from app.services.vault_service import (
-    initialize_owner_vault,
-    reset_owner_vault,
-)
-
-from app.schemas.vault import VaultStatusResponse
-
 from app.services.vault_service import (
     initialize_owner_vault,
     reset_owner_vault,
     get_vault_status,
 )
+from app.services.secret_service import verify_owner_vault_key
 router = APIRouter(
     prefix="/vault",
     tags=["Vault"],
@@ -82,9 +78,9 @@ def initialize_vault(
         )
 
         return VaultInitializeResponse(
-    generated_vault_key=vault_key if payload.mode == "generated" else None,
-    message="Vault initialized successfully.",
-)
+            generated_vault_key=vault_key if payload.mode == "generated" else None,
+            message="Vault initialized successfully.",
+        )
 
     except ValueError as e:
         raise HTTPException(
@@ -95,12 +91,25 @@ def initialize_vault(
 @router.post(
     "/reset",
     summary="Reset Vault",
-    description="Reset the owner's vault and generate a new encryption key.",
+    description=(
+        "Verify the current Vault Key, then permanently delete all secrets "
+        "and reset the vault so a new Vault Key can be set."
+    ),
 )
 def reset_vault(
+    payload: VaultResetRequest,
     db: Session = Depends(get_db),
     owner: Owner = Depends(get_current_owner),
 ):
+    # The owner must prove they know the CURRENT vault key before we allow
+    # them to wipe it. Without this, anyone with a stolen session token
+    # could destroy every secret without knowing the key at all.
+    verify_owner_vault_key(
+        db=db,
+        owner_id=owner.id,
+        vault_key=payload.vault_key,
+    )
+
     reset_owner_vault(
         db=db,
         owner=owner,
@@ -108,8 +117,8 @@ def reset_vault(
 
     return {
         "message": (
-            "Vault reset successfully. "
-            "Initialize your vault again to get a new Vault Key."
+            "Vault reset successfully. All previous secrets have been "
+            "permanently deleted. Initialize your vault again to set a new Vault Key."
         )
     }
 

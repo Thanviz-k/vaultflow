@@ -41,17 +41,20 @@ function VaultKeyModal({
 
           <input
             type="password"
+            className="input"
             placeholder="Vault Key"
             value={vaultKey}
+            autoFocus
             onChange={(e) =>
               setVaultKey(e.target.value)
             }
           />
 
-          <div className="modal-actions">
+          <div className="modal-footer">
 
             <button
               type="button"
+              className="btn btn-outline"
               onClick={onCancel}
             >
               Cancel
@@ -59,6 +62,7 @@ function VaultKeyModal({
 
             <button
               type="submit"
+              className="btn btn-primary"
               disabled={loading}
             >
               {loading ? "Verifying..." : "Continue"}

@@ -6,6 +6,7 @@ from app.core.exceptions import ValidationError
 from app.core.logger import logger
 
 from app.models.owner import Owner
+from app.dependencies.auth import get_current_owner
 
 from app.schemas.owner import (
     OwnerCreateRequest,
@@ -20,6 +21,18 @@ router = APIRouter(
     prefix="/owners",
     tags=["Owners"],
 )
+
+
+@router.get(
+    "/me",
+    summary="Get My Profile",
+    description="Retrieve the authenticated owner's account details.",
+    response_model=OwnerInfo,
+)
+def get_my_profile(
+    current_owner: Owner = Depends(get_current_owner),
+):
+    return current_owner
 
 @router.post(
     "/register",

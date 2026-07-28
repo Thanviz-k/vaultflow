@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   LogOut,
   Bell,
@@ -5,6 +6,8 @@ import {
 } from "lucide-react";
 
 function Navbar({ title, onLogout }) {
+
+  const navigate = useNavigate();
 
   return (
 
@@ -24,7 +27,11 @@ function Navbar({ title, onLogout }) {
 
         </button>
 
-        <button className="btn btn-icon">
+        <button
+          className="btn btn-icon"
+          title="Profile"
+          onClick={() => navigate("/profile")}
+        >
 
           <UserCircle size={22} />
 

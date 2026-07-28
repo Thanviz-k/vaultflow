@@ -49,7 +49,7 @@ def test_create_secret(client):
     assert initialize.status_code == 200
 
     # Get generated vault key
-    vault_key = initialize.json()["generated_key"]
+    vault_key = initialize.json()["generated_vault_key"]
 
     assert vault_key is not None
 

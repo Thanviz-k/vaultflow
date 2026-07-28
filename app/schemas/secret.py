@@ -97,6 +97,7 @@ class QueryRequest(BaseModel):
 
 
 class QueryResponse(BaseModel):
+    answer: str
     intent: dict
     result: dict
 

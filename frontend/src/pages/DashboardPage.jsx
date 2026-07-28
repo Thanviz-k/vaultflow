@@ -76,9 +76,13 @@ function DashboardPage({ token, onLogout }) {
 
   const filteredSecrets = secrets.filter((secret) => {
     const statusMatch = filter === "All" ? true : secret.status === filter;
-    const searchMatch = secret.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+
+    const query = search.trim().toLowerCase();
+    const searchMatch =
+      query === "" ||
+      secret.name?.toLowerCase().includes(query) ||
+      secret.type?.toLowerCase().includes(query) ||
+      secret.status?.toLowerCase().includes(query);
 
     return statusMatch && searchMatch;
   });
@@ -176,15 +180,24 @@ function DashboardPage({ token, onLogout }) {
 
           {filteredSecrets.length === 0 ? (
             <div className="empty-state">
-              <h2>No Secrets Found</h2>
-              <p>Create your first encrypted secret to get started.</p>
-              <button
-                className="create-btn"
-                onClick={() => setShowCreate(true)}
-              >
-                <Plus size={18} />
-                Create Secret
-              </button>
+              {secrets.length === 0 ? (
+                <>
+                  <h2>No Secrets Found</h2>
+                  <p>Create your first encrypted secret to get started.</p>
+                  <button
+                    className="create-btn"
+                    onClick={() => setShowCreate(true)}
+                  >
+                    <Plus size={18} />
+                    Create Secret
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2>No Matching Secrets</h2>
+                  <p>Try a different search term or filter.</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="secret-grid">

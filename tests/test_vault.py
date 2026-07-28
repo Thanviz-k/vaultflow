@@ -45,4 +45,4 @@ def test_initialize_vault(client):
     body = response.json()
 
     assert body["message"] == "Vault initialized successfully."
-    assert body["generated_key"] is not None
+    assert body["generated_vault_key"] is not None

@@ -906,6 +906,7 @@ AI PAGE
     border:var(--neo-border);
     box-shadow:var(--shadow-sm);
     line-height:1.7;
+    white-space:pre-line;
 }
 
 .ai-message.user{

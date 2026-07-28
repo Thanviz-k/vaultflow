@@ -9,273 +9,133 @@ import {
 
 import { revealSecret } from "../../api";
 
-function RevealSecretModal({
-
-  secret,
-
-  token,
-
-  onClose,
-
-}) {
-
-  const [vaultKey, setVaultKey] =
-    useState("");
-
-  const [revealedSecret,
-    setRevealedSecret] =
-    useState("");
-
-  const [loading,
-    setLoading] =
-    useState(false);
-
-  const [error,
-    setError] =
-    useState("");
-
-  const [showVaultKey,
-    setShowVaultKey] =
-    useState(false);
-
-  const [showSecret,
-    setShowSecret] =
-    useState(false);
+function RevealSecretModal({ secret, token, onClose }) {
+  const [vaultKey, setVaultKey] = useState("");
+  const [revealedSecret, setRevealedSecret] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showVaultKey, setShowVaultKey] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
 
   async function handleReveal() {
-
     setLoading(true);
-
     setError("");
 
     try {
+      const data = await revealSecret(secret.id, vaultKey, token);
 
-      const data =
-        await revealSecret(
-
-          secret.id,
-
-          vaultKey,
-
-          token,
-
-        );
-
-      setRevealedSecret(
-        data.value
-      );
+      setRevealedSecret(data.value);
       setVaultKey("");
-
       setShowSecret(true);
-
-    }
-
-    catch (err) {
-
-      setError(
-        err.message
-      );
-
-    }
-
-    finally {
-
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setLoading(false);
-
     }
-
   }
 
   function copySecret() {
-
-    navigator.clipboard.writeText(
-      revealedSecret
-    );
-
+    navigator.clipboard.writeText(revealedSecret);
   }
-    return (
-<form
-  onSubmit={(e) => {
-    e.preventDefault();
-    handleReveal();
-  }}
->
 
-  {/* Vault Key input */}
-
-  {/* Reveal button */}
-
-
+  return (
     <div className="modal-overlay">
-
       <div className="modal">
-
         <div className="modal-header">
-
           <div>
-
             <h2>
-
-              <ShieldCheck size={22} />
-
+              <ShieldCheck size={22} style={{ marginRight: 8, verticalAlign: "middle" }} />
               Reveal Secret
-
             </h2>
-
-            <p>
-
-              Enter the Vault Key used when this secret was created.
-
-            </p>
-
+            <p>Enter the Vault Key used when this secret was created.</p>
           </div>
-
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={onClose}
-          >
-
+          <button type="button" className="icon-btn" onClick={onClose}>
             <X size={20} />
-
           </button>
-
         </div>
-          {!revealedSecret && (
-        <div className="input-group">
 
-          <label>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleReveal();
+          }}
+        >
+          <div className="modal-body">
+            {!revealedSecret && (
+              <div className="input-group">
+                <label>Vault Key</label>
 
-            Vault Key
+                <div className="password-wrapper">
+                  <input
+                    type={showVaultKey ? "text" : "password"}
+                    value={vaultKey}
+                    onChange={(e) => setVaultKey(e.target.value)}
+                    placeholder="Enter your Vault Key"
+                    autoFocus
+                  />
 
-          </label>
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowVaultKey(!showVaultKey)}
+                  >
+                    {showVaultKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            )}
 
-          <div className="password-wrapper">
+            {error && <p className="alert alert-danger">{error}</p>}
 
-            <input
-              type={
-                showVaultKey
-                  ? "text"
-                  : "password"
-              }
-              value={vaultKey}
-              onChange={(e) =>
-                setVaultKey(e.target.value)
-              }
-              placeholder="Enter your Vault Key"
-            />
+            {!revealedSecret && (
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading || !vaultKey.trim()}
+              >
+                {loading ? "Revealing..." : "Reveal Secret"}
+              </button>
+            )}
 
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() =>
-                setShowVaultKey(
-                  !showVaultKey
-                )
-              }
-            >
+            {revealedSecret && (
+              <>
+                <hr />
 
-              {showVaultKey
-                ? <EyeOff size={18} />
-                : <Eye size={18} />}
+                <div className="input-group">
+                  <label>Secret</label>
 
-            </button>
+                  <div className="password-wrapper">
+                    <input
+                      readOnly
+                      type={showSecret ? "text" : "password"}
+                      value={revealedSecret}
+                    />
 
-          </div>
-
-        </div>
-          )}
-
-        {error && (
-
-          <div className="alert-error">
-
-            {error}
-
-          </div>
-
-        )}
-
-        <button
-  type="submit"
-  className="primary-btn"
-  disabled={loading}
->
-  {loading ? "Revealing..." : "Reveal Secret"}
-</button>
-
-        {revealedSecret && (
-
-          <>
-
-            <hr />
-
-            <div className="input-group">
-
-              <label>
-
-                Secret
-
-              </label>
-
-              <div className="password-wrapper">
-
-                <input
-                  readOnly
-                  type={
-                    showSecret
-                      ? "text"
-                      : "password"
-                  }
-                  value={revealedSecret}
-                />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowSecret(!showSecret)}
+                    >
+                      {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
 
                 <button
                   type="button"
-                  className="password-toggle"
-                  onClick={() =>
-                    setShowSecret(
-                      !showSecret
-                    )
-                  }
+                  className="btn btn-secondary"
+                  onClick={copySecret}
                 >
-
-                  {showSecret
-                    ? <EyeOff size={18} />
-                    : <Eye size={18} />}
-
+                  <Copy size={18} />
+                  Copy Secret
                 </button>
-
-              </div>
-
-            </div>
-
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={copySecret}
-            >
-
-              <Copy size={18} />
-
-              Copy Secret
-
-            </button>
-
-          </>
-
-        )}
-
+              </>
+            )}
+          </div>
+        </form>
       </div>
-
     </div>
-
-  </form>
-
   );
-
 }
 
 export default RevealSecretModal;
-
-// </form>

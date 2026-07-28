@@ -8,8 +8,12 @@ class VaultInitializeRequest(BaseModel):
 
 
 class VaultInitializeResponse(BaseModel):
-    generated_key: str | None = None
+    generated_vault_key: str | None = None
     message: str
+
+
+class VaultResetRequest(BaseModel):
+    vault_key: str
 
 
 class VaultStatusResponse(BaseModel):
