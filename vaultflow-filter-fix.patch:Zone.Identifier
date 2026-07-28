@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://claude.ai/chat/6fdee221-61ff-4d17-9f37-6fa361b5a7f0
+HostUrl=https://claude.ai/api/organizations/3121e5c0-cf5d-494d-8a7b-ce349616c188/conversations/6fdee221-61ff-4d17-9f37-6fa361b5a7f0/wiggle/download-file?path=%2Fmnt%2Fuser-data%2Foutputs%2Fvaultflow-filter-fix.patch
