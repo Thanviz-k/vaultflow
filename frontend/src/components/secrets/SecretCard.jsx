@@ -78,134 +78,124 @@ function getSecretIcon(type = "") {
 
 return (
   <>
-    <div className="secret-card">
+<div className="secret-card">
 
-      <div className="secret-card-top">
+  <div className="secret-left">
 
-        <div className="secret-identity">
+    <div className="secret-icon">
+      {getSecretIcon(secret.type)}
+    </div>
 
-          <div className="secret-icon">
-            <Lock size={24} />
-            </div>
+    <div className="secret-info">
 
-          <div>
-            <span className="secret-label">
-              SECRET
-            </span>
+      <h3 className="secret-title">
+        {secret.name}
+      </h3>
 
-            <h3>{secret.name}</h3>
-          </div>
+      <span className="secret-type">
+        {secret.type || "Secret"}
+      </span>
 
-        </div>
+    </div>
 
-        <div
-          className={`secret-status status-${secret.status?.toLowerCase()}`}
-        >
-          <span className="status-dot"></span>
-          {secret.status}
-        </div>
+  </div>
 
+  <div className="secret-center">
+
+    <div
+      className={`secret-status status-${secret.status?.toLowerCase()}`}
+    >
+      <span className="status-dot"></span>
+      {secret.status}
+    </div>
+
+    <div className="secret-meta">
+
+      <div className="secret-date">
+        <small>Expires</small>
+        <strong>{formatDate(secret.expires_at)}</strong>
       </div>
 
-      <div className="secret-divider"></div>
-
-      <div className="secret-metadata">
-
-        <div>
-          <span>EXPIRES</span>
-          <strong>{formatDate(secret.expires_at)}</strong>
-        </div>
-
-        <div>
-          <span>CREATED</span>
-          <strong>
-            {secret.created_at
-              ? formatDate(secret.created_at)
-              : "Unknown"}
-          </strong>
-        </div>
-
-      </div>
-
-      <div className="secret-actions">
-
-        {/* Reveal */}
-
-        <button
-          className="action-btn reveal-btn"
-          disabled={secret.status?.toLowerCase() === "revoked"}
-          onClick={() => {
-
-            if (secret.status?.toLowerCase() === "revoked") {
-              toast.error(
-                "This secret has been revoked."
-              );
-              return;
-            }
-
-            setShowReveal(true);
-
-          }}
-        >
-          <Eye size={18} />
-          Reveal
-        </button>
-
-        {/* Edit */}
-
-        <button
-          className="action-btn edit-btn"
-          disabled={secret.status?.toLowerCase() === "revoked"}
-          onClick={() => {
-
-            if (secret.status?.toLowerCase() === "revoked") {
-              toast.error(
-                "Revoked secrets cannot be edited."
-              );
-              return;
-            }
-
-            setShowEdit(true);
-
-          }}
-        >
-          <Pencil size={18} />
-          Edit
-        </button>
-
-        {/* Revoke */}
-
-        <button
-          className="action-btn revoke-btn"
-          disabled={secret.status?.toLowerCase() === "revoked"}
-          onClick={() => {
-
-            if (secret.status?.toLowerCase() === "revoked") {
-              toast.error("Already revoked.");
-              return;
-            }
-
-            setShowConfirm(true);
-
-          }}
-        >
-          <Ban size={18} />
-          Revoke
-        </button>
-
-        {/* Delete */}
-
-        <button
-          className="action-btn delete-btn"
-          onClick={() => setShowDeleteConfirm(true)}
-        >
-          <Trash2 size={18} />
-          Delete
-        </button>
-
+      <div className="secret-date">
+        <small>Created</small>
+        <strong>
+          {secret.created_at
+            ? formatDate(secret.created_at)
+            : "Unknown"}
+        </strong>
       </div>
 
     </div>
+
+  </div>
+
+  <div className="secret-actions">
+
+    <button
+      title="Reveal Secret"
+      className="action-btn reveal-btn"
+      disabled={secret.status?.toLowerCase() === "revoked"}
+      onClick={() => {
+
+        if (secret.status?.toLowerCase() === "revoked") {
+          toast.error("This secret has been revoked.");
+          return;
+        }
+
+        setShowReveal(true);
+
+      }}
+    >
+      <Eye size={18} />
+    </button>
+
+    <button
+      title="Edit Secret"
+      className="action-btn edit-btn"
+      disabled={secret.status?.toLowerCase() === "revoked"}
+      onClick={() => {
+
+        if (secret.status?.toLowerCase() === "revoked") {
+          toast.error("Revoked secrets cannot be edited.");
+          return;
+        }
+
+        setShowEdit(true);
+
+      }}
+    >
+      <Pencil size={18} />
+    </button>
+
+    <button
+      title="Revoke Secret"
+      className="action-btn revoke-btn"
+      disabled={secret.status?.toLowerCase() === "revoked"}
+      onClick={() => {
+
+        if (secret.status?.toLowerCase() === "revoked") {
+          toast.error("Already revoked.");
+          return;
+        }
+
+        setShowConfirm(true);
+
+      }}
+    >
+      <Ban size={18} />
+    </button>
+
+    <button
+      title="Delete Secret"
+      className="action-btn delete-btn"
+      onClick={() => setShowDeleteConfirm(true)}
+    >
+      <Trash2 size={18} />
+    </button>
+
+  </div>
+
+</div>
 
     {showReveal && (
       <RevealSecretModal

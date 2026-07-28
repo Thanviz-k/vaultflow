@@ -1,19 +1,645 @@
-:root {
+/* ==========================================================
+   VAULTFLOW DESIGN SYSTEM
+   File : variables.css
+   Theme : Soft Neo Brutalism v3.0
+========================================================== */
 
-  --primary: #2563EB;
-  --success: #16A34A;
-  --danger: #DC2626;
-  --warning: #EA580C;
+:root{
 
-  --background: #F8FAFC;
-  --surface: #FFFFFF;
+/* ==========================================================
+   BACKGROUND COLORS
+========================================================== */
 
-  --text: #111827;
-  --muted: #6B7280;
+--bg:#FFFDF7;
+--surface:#FFFFFF;
+--surface-alt:#FFF9EC;
+--surface-hover:#FFF4CC;
+--surface-dark:#F5F1E8;
 
-  --radius:16px;
+/* ==========================================================
+   TEXT COLORS
+========================================================== */
 
-  --shadow:
-      0 6px 18px rgba(0,0,0,.08);
+--text:#1F2937;
+--text-light:#374151;
+--muted:#6B7280;
+--placeholder:#9CA3AF;
 
+/* ==========================================================
+   BORDER
+========================================================== */
+
+--border:#1F2937;
+--border-light:#D6D3D1;
+--border-soft:#E7E5E4;
+
+/* ==========================================================
+   PRIMARY
+========================================================== */
+
+--primary:#FACC15;
+--primary-hover:#EAB308;
+--primary-light:#FEF3C7;
+--primary-extra:#FFF8DB;
+
+/* ==========================================================
+   SUCCESS
+========================================================== */
+
+--success:#4ADE80;
+--success-hover:#22C55E;
+--success-light:#DCFCE7;
+--success-extra:#F0FDF4;
+
+/* ==========================================================
+   WARNING
+========================================================== */
+
+--warning:#FB923C;
+--warning-hover:#F97316;
+--warning-light:#FFEDD5;
+--warning-extra:#FFF7ED;
+
+/* ==========================================================
+   DANGER
+========================================================== */
+
+--danger:#F87171;
+--danger-hover:#EF4444;
+--danger-light:#FEE2E2;
+--danger-extra:#FEF2F2;
+
+/* ==========================================================
+   INFO
+========================================================== */
+
+--info:#60A5FA;
+--info-hover:#3B82F6;
+--info-light:#DBEAFE;
+--info-extra:#EFF6FF;
+
+/* ==========================================================
+   SECONDARY
+========================================================== */
+
+--secondary:#C4B5FD;
+--secondary-hover:#A78BFA;
+--secondary-light:#EDE9FE;
+--secondary-extra:#F5F3FF;
+
+/* ==========================================================
+   ACCENT COLORS
+========================================================== */
+
+--pink:#FDA4AF;
+--pink-light:#FFE4E6;
+
+--mint:#6EE7B7;
+--mint-light:#ECFDF5;
+
+--sky:#7DD3FC;
+--sky-light:#F0F9FF;
+
+--orange:#FDBA74;
+--orange-light:#FFF7ED;
+
+--lime:#BEF264;
+--lime-light:#F7FEE7;
+
+/* ==========================================================
+   GRAYS
+========================================================== */
+
+--gray-50:#FAFAF9;
+--gray-100:#F5F5F4;
+--gray-200:#E7E5E4;
+--gray-300:#D6D3D1;
+--gray-400:#A8A29E;
+--gray-500:#78716C;
+--gray-600:#57534E;
+--gray-700:#44403C;
+--gray-800:#292524;
+--gray-900:#1C1917;
+
+/* ==========================================================
+   TYPOGRAPHY
+========================================================== */
+
+--font-family:
+"Inter",
+system-ui,
+-apple-system,
+BlinkMacSystemFont,
+"Segoe UI",
+sans-serif;
+
+--font-xs:12px;
+--font-sm:13px;
+--font-md:14px;
+--font-base:15px;
+--font-lg:16px;
+--font-xl:18px;
+--font-2xl:22px;
+--font-3xl:28px;
+--font-4xl:36px;
+--font-5xl:44px;
+
+/* ==========================================================
+   FONT WEIGHT
+========================================================== */
+
+--fw-regular:400;
+--fw-medium:500;
+--fw-semibold:600;
+--fw-bold:700;
+--fw-extrabold:800;
+--fw-black:900;
+
+/* ==========================================================
+   LINE HEIGHT
+========================================================== */
+
+--lh-tight:1.2;
+--lh-normal:1.5;
+--lh-relaxed:1.8;
+
+/* ==========================================================
+   LETTER SPACING
+========================================================== */
+
+--tracking-tight:-0.03em;
+--tracking-normal:0;
+--tracking-wide:0.03em;
+
+/* ==========================================================
+   BORDER RADIUS
+========================================================== */
+
+--radius-xs:10px;
+--radius-sm:14px;
+--radius-md:18px;
+--radius-lg:22px;
+--radius-xl:26px;
+--radius-2xl:32px;
+--radius-round:999px;
+
+/* ==========================================================
+   SHADOWS
+========================================================== */
+
+--shadow-xs:
+2px 2px 0 var(--border);
+
+--shadow-sm:
+3px 3px 0 var(--border);
+
+--shadow-md:
+4px 4px 0 var(--border);
+
+--shadow-lg:
+5px 5px 0 var(--border);
+
+--shadow-xl:
+7px 7px 0 var(--border);
+
+--shadow-hover:
+6px 6px 0 var(--border);
+
+--shadow-card:
+3px 3px 0 rgba(31,41,55,.95);
+
+--shadow-modal:
+8px 8px 0 rgba(31,41,55,.95);/* ==========================================================
+   SPACING SYSTEM
+========================================================== */
+
+--space-0:0;
+--space-1:4px;
+--space-2:8px;
+--space-3:12px;
+--space-4:16px;
+--space-5:20px;
+--space-6:24px;
+--space-7:28px;
+--space-8:32px;
+--space-9:40px;
+--space-10:48px;
+--space-11:56px;
+--space-12:64px;
+--space-13:72px;
+
+/* ==========================================================
+   LAYOUT
+========================================================== */
+
+--sidebar-width:250px;
+
+--navbar-height:78px;
+
+--page-width:1440px;
+
+--page-padding:32px;
+
+--content-gap:28px;
+
+--section-gap:40px;
+
+/* ==========================================================
+   SIDEBAR
+========================================================== */
+
+--sidebar-bg:#FFF7D6;
+--sidebar-hover:#FFF0B8;
+--sidebar-active:#FACC15;
+--sidebar-text:#1F2937;
+
+/* ==========================================================
+   NAVBAR
+========================================================== */
+
+--navbar-bg:#FFFFFF;
+
+/* ==========================================================
+   CARD
+========================================================== */
+
+--card-bg:#FFFFFF;
+
+--card-border:2px solid var(--border);
+
+--card-radius:22px;
+
+--card-padding:22px;
+
+--card-gap:18px;
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
+--button-height:48px;
+
+--button-radius:16px;
+
+--button-padding:0 22px;
+
+--button-font:14px;
+
+--button-weight:700;
+
+/* Primary */
+
+--button-primary-bg:var(--primary);
+--button-primary-hover:var(--primary-hover);
+--button-primary-text:#1F2937;
+
+/* Success */
+
+--button-success-bg:var(--success);
+--button-success-hover:var(--success-hover);
+--button-success-text:#FFFFFF;
+
+/* Danger */
+
+--button-danger-bg:var(--danger);
+--button-danger-hover:var(--danger-hover);
+--button-danger-text:#FFFFFF;
+
+/* White */
+
+--button-secondary-bg:#FFFFFF;
+--button-secondary-hover:#F9FAFB;
+--button-secondary-text:#1F2937;
+
+/* Info */
+
+--button-info-bg:var(--info);
+--button-info-hover:var(--info-hover);
+--button-info-text:#FFFFFF;
+
+/* Purple Accent */
+
+--button-ai-bg:var(--secondary);
+--button-ai-hover:#B39DFF;
+--button-ai-text:#1F2937;
+
+/* ==========================================================
+   INPUTS
+========================================================== */
+
+--input-height:50px;
+
+--input-radius:16px;
+
+--input-padding:14px 18px;
+
+--input-bg:#FFFFFF;
+
+--input-border:2px solid var(--border);
+
+--input-focus:#FACC15;
+
+--input-placeholder:#9CA3AF;
+
+/* ==========================================================
+   SEARCH
+========================================================== */
+
+--search-height:54px;
+
+--search-radius:18px;
+
+/* ==========================================================
+   MODALS
+========================================================== */
+
+--modal-width:560px;
+
+--modal-radius:24px;
+
+--modal-padding:28px;
+
+--modal-bg:#FFFFFF;
+
+/* ==========================================================
+   STATUS BADGES
+========================================================== */
+
+--status-active-bg:#DCFCE7;
+--status-active-text:#166534;
+
+--status-expired-bg:#FFEDD5;
+--status-expired-text:#9A3412;
+
+--status-revoked-bg:#FEE2E2;
+--status-revoked-text:#991B1B;
+
+--status-total-bg:#FEF3C7;
+--status-total-text:#92400E;
+
+/* ==========================================================
+   TABLE
+========================================================== */
+
+--table-row-height:76px;
+
+--table-radius:18px;
+
+/* ==========================================================
+   ICONS
+========================================================== */
+
+--icon-xs:16px;
+--icon-sm:20px;
+--icon-md:24px;
+--icon-lg:28px;
+--icon-xl:36px;
+--icon-2xl:44px;
+
+/* ==========================================================
+   TRANSITIONS
+========================================================== */
+
+--transition-fast:.15s ease;
+
+--transition:.22s ease;
+
+--transition-slow:.35s ease;
+
+--hover-lift:
+translateY(-3px);
+
+--hover-lift-lg:
+translateY(-5px);
+
+/* ==========================================================
+   OPACITY
+========================================================== */
+
+--disabled-opacity:.55;
+
+--overlay:rgba(15,23,42,.55);/* ==========================================================
+   FOCUS
+========================================================== */
+
+--focus-ring:
+0 0 0 4px rgba(250,204,21,.28);
+
+/* ==========================================================
+   DIVIDERS
+========================================================== */
+
+--divider:#ECE7DD;
+
+/* ==========================================================
+   SCROLLBAR
+========================================================== */
+
+--scrollbar-size:10px;
+
+--scrollbar-track:#F6F2EA;
+
+--scrollbar-thumb:#D6D3D1;
+
+--scrollbar-thumb-hover:#B8B4AE;
+
+/* ==========================================================
+   BADGES
+========================================================== */
+
+--badge-radius:999px;
+
+--badge-padding:6px 12px;
+
+/* ==========================================================
+   CHIP
+========================================================== */
+
+--chip-radius:999px;
+
+--chip-padding:8px 14px;
+
+/* ==========================================================
+   TOOLTIP
+========================================================== */
+
+--tooltip-bg:#1F2937;
+
+--tooltip-text:#FFFFFF;
+
+/* ==========================================================
+   DROPDOWN
+========================================================== */
+
+--dropdown-radius:18px;
+
+--dropdown-padding:10px;
+
+/* ==========================================================
+   AVATAR
+========================================================== */
+
+--avatar-sm:36px;
+
+--avatar-md:44px;
+
+--avatar-lg:56px;
+
+/* ==========================================================
+   PROGRESS
+========================================================== */
+
+--progress-height:8px;
+
+--progress-radius:999px;
+
+/* ==========================================================
+   STATUS ICON COLORS
+========================================================== */
+
+--icon-total:#D97706;
+
+--icon-success:#16A34A;
+
+--icon-warning:#EA580C;
+
+--icon-danger:#DC2626;
+
+--icon-info:#2563EB;
+
+/* ==========================================================
+   Z INDEX
+========================================================== */
+
+--z-dropdown:100;
+
+--z-sidebar:200;
+
+--z-navbar:300;
+
+--z-overlay:800;
+
+--z-modal:900;
+
+--z-toast:1000;
+
+/* ==========================================================
+   BREAKPOINTS
+========================================================== */
+
+--mobile:640px;
+
+--tablet:768px;
+
+--laptop:1024px;
+
+--desktop:1280px;
+
+--wide:1440px;
+
+/* ==========================================================
+   ANIMATION SPEED
+========================================================== */
+
+--speed-fast:.15s;
+
+--speed-normal:.25s;
+
+--speed-slow:.35s;
+
+/* ==========================================================
+   EASING
+========================================================== */
+
+--ease:cubic-bezier(.2,.8,.2,1);
+
+/* ==========================================================
+   SOFT NEO BRUTALISM HELPERS
+========================================================== */
+
+--neo-border:2px solid var(--border);
+
+--neo-shadow:
+3px 3px 0 var(--border);
+
+--neo-shadow-hover:
+5px 5px 0 var(--border);
+
+--neo-radius:20px;
+
+--neo-radius-lg:24px;
+
+--neo-radius-xl:28px;
+
+/* ==========================================================
+   FILTER CARD COLORS
+========================================================== */
+
+--filter-total:#FEF3C7;
+
+--filter-active:#DCFCE7;
+
+--filter-expired:#FFEDD5;
+
+--filter-revoked:#FEE2E2;
+
+/* ==========================================================
+   SIDEBAR ICON COLORS
+========================================================== */
+
+--sidebar-icon-bg:#FFFFFF;
+
+--sidebar-icon-active:#FFF8DB;
+
+/* ==========================================================
+   LOGIN PAGE
+========================================================== */
+
+--login-width:460px;
+
+--login-illustration:#FFF0B8;
+
+--login-card:#FFFFFF;
+
+/* ==========================================================
+   AI PAGE
+========================================================== */
+
+--ai-card:#FFFFFF;
+
+--ai-highlight:#EEF2FF;
+
+/* ==========================================================
+   SETTINGS
+========================================================== */
+
+--settings-card:#FFFFFF;
+
+/* ==========================================================
+   EMPTY STATE
+========================================================== */
+
+--empty-bg:#FFFFFF;
+
+--empty-icon:#FACC15;
+
+/* ==========================================================
+   END
+========================================================== */
+/* ========= Compatibility aliases ========= */
+
+--primary-color: var(--primary);
+--success-color: var(--success);
+--warning-color: var(--warning);
+--danger-color: var(--danger);
+--info-color: var(--info);
+
+--text-primary: var(--text);
+--text-muted: var(--muted);
+
+--border-color: var(--border);
+
+--color-white: var(--surface);
+
+--background-color: var(--bg);
 }

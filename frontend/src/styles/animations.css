@@ -1,16 +1,481 @@
-.hover-card{
+/*==========================================================
+GLOBAL TRANSITIONS
+==========================================================*/
 
-transition:.25s ease;
+*{
+    transition:
+        background-color .25s ease,
+        border-color .25s ease,
+        color .25s ease,
+        box-shadow .25s ease;
+}
+
+/*==========================================================
+FADE IN
+==========================================================*/
+
+.fade-in{
+    animation:fadeIn .45s ease both;
+}
+
+@keyframes fadeIn{
+
+from{
+    opacity:0;
+}
+
+to{
+    opacity:1;
+}
 
 }
 
-.hover-card:hover{
+/*==========================================================
+FADE UP
+==========================================================*/
 
-transform:
-translateY(-5px)
-scale(1.04);
+.fade-up{
+    animation:fadeUp .45s ease both;
+}
 
-box-shadow:
-0 14px 32px rgba(0,0,0,.15);
+@keyframes fadeUp{
+
+from{
+    opacity:0;
+    transform:translateY(20px);
+}
+
+to{
+    opacity:1;
+    transform:translateY(0);
+}
+
+}
+
+/*==========================================================
+SCALE
+==========================================================*/
+
+.scale-in{
+    animation:scaleIn .25s ease;
+}
+
+@keyframes scaleIn{
+
+from{
+    opacity:0;
+    transform:scale(.92);
+}
+
+to{
+    opacity:1;
+    transform:scale(1);
+}
+
+}
+
+/*==========================================================
+BUTTON
+==========================================================*/
+
+.btn{
+    transition:all .25s ease;
+}
+
+.btn:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:var(--shadow-md);
+}
+
+.btn:active{
+
+    transform:scale(.97);
+}
+
+
+/*==========================================================
+CARD
+==========================================================*/
+
+.card,
+.secret-card,
+.stat-card,
+.analytics-card,
+.quick-card{
+
+    transition:all .28s ease;
+}
+
+.card:hover,
+.secret-card:hover,
+.stat-card:hover,
+.analytics-card:hover,
+.quick-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:var(--shadow-lg);
+}
+
+
+/*==========================================================
+SIDEBAR
+==========================================================*/
+
+.sidebar-item{
+
+    transition:all .25s ease;
+}
+
+.sidebar-item:hover{
+
+    transform:translateX(6px);
+}
+
+.sidebar-item.active{
+
+    transform:translateX(8px);
+}
+
+
+/*==========================================================
+ICON
+==========================================================*/
+
+.sidebar-icon,
+.stat-icon,
+.quick-icon,
+.secret-icon{
+
+    transition:all .25s ease;
+}
+
+.sidebar-item:hover .sidebar-icon,
+.stat-card:hover .stat-icon,
+.secret-card:hover .secret-icon{
+
+    transform:rotate(-8deg) scale(1.08);
+}
+
+
+/*==========================================================
+INPUT
+==========================================================*/
+
+input,
+textarea,
+select{
+
+    transition:all .25s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+
+    transform:translateY(-2px);
+}
+
+
+/*==========================================================
+MODAL
+==========================================================*/
+
+.modal{
+
+    animation:modalEnter .28s ease;
+}
+
+@keyframes modalEnter{
+
+from{
+
+opacity:0;
+
+transform:translateY(24px) scale(.95);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0) scale(1);
+
+}
+
+}
+
+
+/*==========================================================
+TOAST
+==========================================================*/
+
+.toast{
+
+    animation:toastSlide .35s ease;
+}
+
+@keyframes toastSlide{
+
+from{
+
+opacity:0;
+
+transform:translateX(40px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateX(0);
+
+}
+
+}
+
+
+/*==========================================================
+SPINNER
+==========================================================*/
+
+.spinner{
+
+    animation:spin .9s linear infinite;
+}
+
+@keyframes spin{
+
+to{
+
+transform:rotate(360deg);
+
+}
+
+}
+
+
+/*==========================================================
+PULSE
+==========================================================*/
+
+.pulse{
+
+    animation:pulse 1.8s infinite;
+}
+
+@keyframes pulse{
+
+0%{
+
+transform:scale(1);
+
+}
+
+50%{
+
+transform:scale(1.05);
+
+}
+
+100%{
+
+transform:scale(1);
+
+}
+
+}
+
+
+/*==========================================================
+FLOAT
+==========================================================*/
+
+.float{
+
+    animation:float 3s ease-in-out infinite;
+}
+
+@keyframes float{
+
+0%{
+
+transform:translateY(0);
+
+}
+
+50%{
+
+transform:translateY(-8px);
+
+}
+
+100%{
+
+transform:translateY(0);
+
+}
+
+}
+
+
+/*==========================================================
+SKELETON
+==========================================================*/
+
+.skeleton{
+
+    position:relative;
+
+    overflow:hidden;
+
+    background:#F3F4F6;
+}
+
+.skeleton::after{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:-100%;
+
+width:100%;
+height:100%;
+
+background:linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.7),
+transparent
+);
+
+animation:shimmer 1.4s infinite;
+}
+
+@keyframes shimmer{
+
+100%{
+
+left:100%;
+
+}
+
+}
+
+
+/*==========================================================
+BADGE
+==========================================================*/
+
+.secret-status{
+
+    animation:badgePop .25s ease;
+}
+
+@keyframes badgePop{
+
+from{
+
+opacity:0;
+
+transform:scale(.8);
+
+}
+
+to{
+
+opacity:1;
+
+transform:scale(1);
+
+}
+
+}
+
+
+/*==========================================================
+PAGE
+==========================================================*/
+
+.page-enter{
+
+    animation:pageEnter .5s ease;
+}
+
+@keyframes pageEnter{
+
+from{
+
+opacity:0;
+
+transform:translateY(18px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
+
+
+/*==========================================================
+SCROLLBAR
+==========================================================*/
+
+::-webkit-scrollbar{
+
+width:10px;
+
+height:10px;
+}
+
+::-webkit-scrollbar-track{
+
+background:#FFFDF7;
+}
+
+::-webkit-scrollbar-thumb{
+
+background:#FACC15;
+
+border-radius:999px;
+
+border:2px solid #FFFDF7;
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+background:#EAB308;
+}
+
+
+/*==========================================================
+REDUCED MOTION
+==========================================================*/
+
+@media (prefers-reduced-motion: reduce){
+
+*,
+*::before,
+*::after{
+
+animation:none !important;
+
+transition:none !important;
+
+scroll-behavior:auto !important;
+
+}
 
 }

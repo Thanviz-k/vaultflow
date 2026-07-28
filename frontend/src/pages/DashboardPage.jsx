@@ -9,14 +9,15 @@ import {
 } from "../api";
 
 import VaultSetupModal from "../components/vault/VaultSetupModal";
-import AIAgentCard from "../components/dashboard/AIAgentCard";
 import SecretCard from "../components/secrets/SecretCard";
 import SecretForm from "../components/SecretForm";
-
+import "../styles/dashboard.css";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Alert from "../components/ui/Alert";
 
 function DashboardPage({ token, onLogout }) {
+
+  console.log("Token:", token);
 
   const [secrets, setSecrets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,19 @@ function DashboardPage({ token, onLogout }) {
 
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const totalSecrets = secrets.length;
+
+const activeSecrets = secrets.filter(
+  (secret) => secret.status.toLowerCase() === "active"
+).length;
+
+const expiredSecrets = secrets.filter(
+  (secret) => secret.status.toLowerCase() === "expired"
+).length;
+
+const revokedSecrets = secrets.filter(
+  (secret) => secret.status.toLowerCase() === "revoked"
+).length;
 
   useEffect(() => {
     initializeDashboard();
@@ -54,6 +68,8 @@ function DashboardPage({ token, onLogout }) {
     try {
 
       const data = await getMySecrets(token);
+      console.log("Secrets:", data);
+       
 
       setSecrets(data);
 
@@ -67,21 +83,21 @@ function DashboardPage({ token, onLogout }) {
     loadSecrets();
   }
 
-  const filteredSecrets = secrets.filter((secret) => {
+const filteredSecrets = secrets.filter((secret) => {
 
-    const statusMatch =
-      filter === "All"
-        ? true
-        : secret.status === filter;
+  const statusMatch =
+    filter === "All"
+      ? true
+      : secret.status.toLowerCase() === filter.toLowerCase();
 
-    const searchMatch =
-      secret.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
+  const searchMatch =
+    secret.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-    return statusMatch && searchMatch;
+  return statusMatch && searchMatch;
 
-  });
+});
 
   if (loading) {
     return (
@@ -108,134 +124,164 @@ function DashboardPage({ token, onLogout }) {
         />
       )}
 
-      <AppLayout
-        title="Dashboard"
-        onLogout={onLogout}
+      <AppLayout title="Dashboard" onLogout={onLogout}>
+
+  {/* Hero */}
+  <section className="dashboard-hero">
+    <div>
+      <h1>Dashboard</h1>
+      <p>
+        Manage and protect your encrypted secrets securely.
+      </p>
+    </div>
+  </section>
+
+  {/* Statistics */}
+  <section className="stats-grid">
+
+  <div
+    className={`stat-card total ${filter === "All" ? "selected" : ""}`}
+    onClick={() => setFilter("All")}
+  >
+    <div className="stat-left">
+      <h3>Total</h3>
+    </div>
+
+    <div className="stat-right">
+      <span>{totalSecrets}</span>
+    </div>
+  </div>
+
+  <div
+    className={`stat-card active ${filter === "Active" ? "selected" : ""}`}
+    onClick={() => setFilter("Active")}
+  >
+    <div className="stat-left">
+      <h3>Active</h3>
+    </div>
+
+    <div className="stat-right">
+      <span>{activeSecrets}</span>
+    </div>
+  </div>
+
+  <div
+    className={`stat-card expired ${filter === "Expired" ? "selected" : ""}`}
+    onClick={() => setFilter("Expired")}
+  >
+    <div className="stat-left">
+      <h3>Expired</h3>
+    </div>
+
+    <div className="stat-right">
+      <span>{expiredSecrets}</span>
+    </div>
+  </div>
+
+  <div
+    className={`stat-card revoked ${filter === "Revoked" ? "selected" : ""}`}
+    onClick={() => setFilter("Revoked")}
+  >
+    <div className="stat-left">
+      <h3>Revoked</h3>
+    </div>
+
+    <div className="stat-right">
+      <span>{revokedSecrets}</span>
+    </div>
+  </div>
+
+</section>
+
+  {/* Toolbar */}
+  <div className="toolbar">
+
+  <div className="toolbar-left">
+
+    <div className="search-box">
+
+      <Search size={18} />
+
+      <input
+        type="text"
+        placeholder="Search secrets..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+    </div>
+
+  </div>
+
+  <div className="toolbar-right">
+
+    <button
+      className="create-btn"
+      onClick={() => setShowCreate(true)}
+    >
+      <Plus size={18} />
+      Create Secret
+    </button>
+
+  </div>
+
+</div>
+
+ 
+
+  {/* Create Secret Modal */}
+  {showCreate && (
+
+    <SecretForm
+      token={token}
+      onSuccess={() => {
+        setShowCreate(false);
+        loadSecrets();
+      }}
+      onCancel={() => setShowCreate(false)}
+    />
+
+  )}
+
+  {/* Empty State */}
+  {filteredSecrets.length === 0 ? (
+
+    <div className="empty-state">
+
+      <h2>No Secrets</h2>
+
+      <p>Create your first encrypted secret.</p>
+
+      <button
+        className="btn btn-primary"
+        onClick={() => setShowCreate(true)}
       >
+        <Plus size={18} />
+        Create Secret
+      </button>
 
-        <div className="page-header">
+    </div>
 
-          <div>
+  ) : (
 
-            <h1>Dashboard</h1>
+    <div className="secret-grid">
 
-            <p>
-              Manage all your encrypted secrets.
-            </p>
+      {filteredSecrets.map((secret) => (
 
-          </div>
+        <SecretCard
+          key={secret.id}
+          secret={secret}
+          token={token}
+          onRefresh={loadSecrets}
+        />
 
-          <button
-            className="primary-btn"
-            onClick={() => setShowCreate(true)}
-          >
-            <Plus size={18} />
-            Create Secret
-          </button>
+      ))}
 
-        </div>
+    </div>
 
-        <div className="search-box">
+  )}
 
-          <Search size={18} />
-
-          <input
-            type="text"
-            placeholder="Search secrets..."
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-          />
-
-        </div>
-
-        <div className="filter-tabs">
-
-          {[
-            "All",
-            "Active",
-            "Expired",
-            "Revoked",
-          ].map((item) => (
-
-            <button
-              key={item}
-              className={
-                filter === item
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
-                setFilter(item)
-              }
-            >
-              {item}
-            </button>
-
-          ))}
-
-        </div>
-      <AIAgentCard />
-        {showCreate && (
-
-          <SecretForm
-            token={token}
-            onSuccess={() => {
-              setShowCreate(false);
-              loadSecrets();
-            }}
-            onCancel={() =>
-              setShowCreate(false)
-            }
-          />
-
-        )}
-
-        {filteredSecrets.length === 0 ? (
-
-          <div className="empty-state">
-
-            <h2>
-              No Secrets Found
-            </h2>
-
-            <p>
-              Create your first encrypted secret.
-            </p>
-
-            <button
-              className="primary-btn"
-              onClick={() =>
-                setShowCreate(true)
-              }
-            >
-              <Plus size={18} />
-              Create Secret
-            </button>
-
-          </div>
-
-        ) : (
-
-          <div className="secret-grid">
-
-            {filteredSecrets.map((secret) => (
-
-              <SecretCard
-                key={secret.id}
-                secret={secret}
-                token={token}
-                onRefresh={loadSecrets}
-              />
-
-            ))}
-
-          </div>
-
-        )}
-
-      </AppLayout>
+</AppLayout>
     </>
   );
 }
