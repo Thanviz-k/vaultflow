@@ -1341,3 +1341,21 @@ SEARCH BAR — remove the "doubled" hard-shadow look
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(250,204,21,.18);
 }
+
+/*==========================================================
+CHECKBOX OPTION (Vault warnings)
+==========================================================*/
+
+.checkbox-option{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:14px;
+    line-height:1.5;
+    cursor:pointer;
+}
+
+.checkbox-option input{
+    width:auto;
+    margin-top:3px;
+}

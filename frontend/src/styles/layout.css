@@ -727,3 +727,85 @@ ol{
         gap: 20px;
     }
 }
+/* ==========================================================
+   COMPACT SIDEBAR & NAVBAR (override)
+========================================================== */
+
+.sidebar{
+    width: 220px;
+    padding: 18px 14px;
+}
+
+.sidebar-logo{
+    gap: 10px;
+    padding: 6px 4px 16px;
+    margin-bottom: 14px;
+}
+
+.logo-icon{
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    font-size: 18px;
+}
+
+.logo-title{
+    font-size: 1rem;
+}
+
+.logo-subtitle{
+    font-size: 0.75rem;
+}
+
+.sidebar-nav{
+    gap: 8px;
+}
+
+.sidebar-item{
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.88rem;
+}
+
+.sidebar-icon{
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.sidebar-footer{
+    padding-top: 16px;
+}
+
+.navbar{
+    height: 68px;
+    padding: 0 22px;
+    margin-bottom: 22px;
+}
+
+.navbar-title{
+    font-size: 1.4rem;
+}
+
+.navbar-subtitle{
+    font-size: 0.85rem;
+}
+
+.app-main{
+    padding: 26px;
+}
+
+.page-container{
+    gap: 22px;
+}
+
+/* Keep the compact width down to a narrower breakpoint than before,
+   so it doesn't collapse to icon-only quite so early */
+@media (max-width: 900px){
+    .sidebar{
+        width: 84px;
+        padding: 16px 8px;
+    }
+}
