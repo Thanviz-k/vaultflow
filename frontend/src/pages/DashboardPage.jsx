@@ -108,7 +108,7 @@ function DashboardPage({ token, onLogout }) {
         <div className="dashboard-page">
           <div className="dashboard-hero">
             <div>
-              <h1>Dashboard</h1>
+              <h1>Welcome back 👋</h1>
               <p>Manage all your encrypted secrets in one place.</p>
             </div>
           </div>
