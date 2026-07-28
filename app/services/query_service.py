@@ -54,7 +54,9 @@ def _parse_intent(raw_response: str) -> dict:
 
     try:
         intent = json.loads(text)
-    except (json.JSONDecodeError, TypeError):
+        if not isinstance(intent, dict):
+            raise ValueError("AI response was valid JSON but not an object")
+    except (json.JSONDecodeError, TypeError, ValueError):
         intent = {
             "action": "list_secrets",
             "status_filter": None,
@@ -64,6 +66,9 @@ def _parse_intent(raw_response: str) -> dict:
     intent.setdefault("action", "list_secrets")
     intent.setdefault("status_filter", None)
     intent.setdefault("expiring_within_days", None)
+
+    if intent.get("status_filter") not in (None, "active", "expired", "revoked"):
+        intent["status_filter"] = None
 
     return intent
 
