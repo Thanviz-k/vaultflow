@@ -1680,3 +1680,27 @@ width:100%;
 .link-button:hover{
     text-decoration:underline;
 }
+/* ---- Tighten Edit/Add Secret modal further (appended override) ---- */
+.modal-body{
+    padding: 18px 22px;
+    gap: 12px;
+}
+
+.modal-body .form-group{
+    margin-bottom: 0;
+}
+
+.modal-body label{
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+.modal-body input,
+.modal-body select{
+    padding: 8px 12px;
+    height: auto;
+}
+
+.modal-footer{
+    padding: 12px 22px;
+}
