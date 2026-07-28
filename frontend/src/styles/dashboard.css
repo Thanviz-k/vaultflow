@@ -800,6 +800,51 @@ SMALL ANIMATIONS
 
 }
 /*==========================================================
+AI AGENT CARD (dashboard promo)
+==========================================================*/
+
+.ai-agent-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+
+    padding:22px 26px;
+
+    background:var(--secondary-light);
+    border:var(--neo-border);
+    border-radius:24px;
+
+    box-shadow:var(--neo-shadow);
+
+    cursor:pointer;
+    transition:.2s;
+}
+
+.ai-agent-card:hover{
+    transform:translateY(-4px);
+    box-shadow:var(--neo-shadow-hover);
+}
+
+.ai-agent-left{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.ai-agent-left h3{
+    font-size:17px;
+    font-weight:700;
+    color:var(--text);
+    margin-bottom:4px;
+}
+
+.ai-agent-left p{
+    color:var(--muted);
+    font-size:14px;
+}
+
+/*==========================================================
 AI PAGE
 ==========================================================*/
 

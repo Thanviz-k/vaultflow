@@ -5,7 +5,7 @@ export function calculateStrength(text = "") {
   const checks = {
 
     length:
-      text.length >= 12,
+      text.length >= 8,
 
     upper:
       /[A-Z]/.test(text),

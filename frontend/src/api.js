@@ -274,7 +274,7 @@ secrets.forEach((secret) => {
 // INITIALIZE VAULT
 
 export async function initializeVault(mode, vaultKey, token) {
-  const res = await fetch(`${API_URL}/vault/initialize`, {
+  const res = await fetch(`${BASE_URL}/vault/initialize`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

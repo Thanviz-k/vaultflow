@@ -1,43 +1,35 @@
 import { useState } from "react";
 import { initializeVault } from "../../api";
 
-export default function VaultSetupModal({
-  open,
-  token,
-  onInitialized,
-}) {
+export default function VaultSetupModal({ token, onInitialized }) {
   const [mode, setMode] = useState("generated");
   const [vaultKey, setVaultKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  if (!open) return null;
+  const [copied, setCopied] = useState(false);
 
   const handleInitialize = async () => {
-  setError("");
+    setError("");
 
-  if (mode === "custom" && vaultKey.trim().length < 8) {
-    setError("Vault key must be at least 8 characters.");
-    return;
-  }
+    if (mode === "custom" && vaultKey.trim().length < 8) {
+      setError("Vault key must be at least 8 characters.");
+      return;
+    }
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const data = await initializeVault(
-      mode,
-      mode === "custom" ? vaultKey : null,
-      token
-    );
+      const data = await initializeVault(
+        mode,
+        mode === "custom" ? vaultKey : null,
+        token
+      );
 
-    if (mode === "generated" && data.generated_vault_key) {
-      const generatedKey = data.generated_vault_key;
+      if (mode === "generated" && data.generated_vault_key) {
+        const generatedKey = data.generated_vault_key;
 
-      // Auto copy
-      await navigator.clipboard.writeText(generatedKey);
-
-      // Auto download
-      const fileContent = `====================================
+        // Auto download — happens immediately, no extra click needed
+        const fileContent = `====================================
 VaultFlow Vault Key
 ====================================
 
@@ -45,97 +37,100 @@ Vault Key:
 ${generatedKey}
 
 IMPORTANT:
-• Keep this key safe.
-• VaultFlow cannot recover it if lost.
+- Keep this key safe.
+- VaultFlow cannot recover it if lost.
 ====================================
 `;
 
-      const blob = new Blob([fileContent], {
-        type: "text/plain",
-      });
+        const blob = new Blob([fileContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "vaultflow-vault-key.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-      const url = URL.createObjectURL(blob);
+        // Best-effort auto copy (some browsers block clipboard writes
+        // outside a direct user gesture, so this can silently no-op)
+        try {
+          await navigator.clipboard.writeText(generatedKey);
+          setCopied(true);
+        } catch {
+          // ignore — copy button below still works
+        }
+      }
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "vaultflow-vault-key.txt";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (onInitialized) {
+        onInitialized();
+      }
+    } catch (err) {
+      setError(err.message || "Failed to initialize vault.");
+    } finally {
+      setLoading(false);
     }
-
-    if (onInitialized) {
-      onInitialized();
-    }
-  } catch (err) {
-    setError(
-      err?.response?.data?.detail ||
-        "Failed to initialize vault."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+    <div className="modal-overlay">
+      <div className="modal">
+        <div className="modal-header">
+          <span className="modal-title">🔐 Set Up Your Vault</span>
+        </div>
 
-        <h2 className="text-2xl font-bold mb-2">
-          Initialize Your Vault
-        </h2>
+        <div className="modal-body">
+          <p className="card-description">
+            Your Vault Key encrypts every secret you store. Choose
+            how you want it created.
+          </p>
 
-        <p className="text-gray-600 mb-6">
-          Your vault must be initialized before storing secrets.
-        </p>
-
-        <div className="space-y-4">
-
-          <label className="flex items-center gap-3">
+          <label className="radio-option">
             <input
               type="radio"
               checked={mode === "generated"}
               onChange={() => setMode("generated")}
             />
-            <span>Generate Secure Vault Key</span>
+            Generate Secure Vault Key ⭐ Recommended
           </label>
 
-          <label className="flex items-center gap-3">
+          <label className="radio-option">
             <input
               type="radio"
               checked={mode === "custom"}
               onChange={() => setMode("custom")}
             />
-            <span>Use My Own Vault Key</span>
+            Use My Own Vault Key
           </label>
 
           {mode === "custom" && (
             <input
               type="password"
-              placeholder="Enter Vault Key"
-              className="w-full border rounded-lg px-3 py-2"
+              className="input"
+              placeholder="Enter your Vault Key"
               value={vaultKey}
               onChange={(e) => setVaultKey(e.target.value)}
             />
           )}
 
-          {error && (
-            <div className="text-red-600 text-sm">
-              {error}
-            </div>
-          )}
+          {error && <p className="alert alert-danger">{error}</p>}
 
+          {copied && (
+            <p className="alert alert-success">
+              Vault Key copied to clipboard and downloaded.
+            </p>
+          )}
+        </div>
+
+        <div className="modal-footer">
           <button
+            className="btn btn-primary"
             onClick={handleInitialize}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 disabled:opacity-60"
           >
             {loading ? "Initializing..." : "Initialize Vault"}
           </button>
-
         </div>
-
       </div>
     </div>
   );

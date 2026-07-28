@@ -1,40 +1,44 @@
-import { LogOut, Bot } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+  LogOut,
+  Bell,
+  UserCircle
+} from "lucide-react";
 
 function Navbar({ title, onLogout }) {
-
-  const navigate = useNavigate();
 
   return (
 
     <header className="navbar">
 
-      <div className="navbar-left">
+      <div>
 
         <h1>{title}</h1>
-
-        <p>
-          Manage and protect your encrypted secrets securely.
-        </p>
 
       </div>
 
       <div className="navbar-actions">
 
-        <button
-          className="ai-btn"
-          onClick={() => navigate("/ai")}
-        >
-          <Bot size={18} />
-          Ask AI
+        <button className="btn btn-icon">
+
+          <Bell size={20} />
+
+        </button>
+
+        <button className="btn btn-icon">
+
+          <UserCircle size={22} />
+
         </button>
 
         <button
           className="logout-btn"
           onClick={onLogout}
         >
+
           <LogOut size={18} />
+
           Logout
+
         </button>
 
       </div>

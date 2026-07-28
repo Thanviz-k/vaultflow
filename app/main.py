@@ -133,8 +133,3 @@ app.add_middleware(
 )
 
 app.middleware("http")(add_security_headers)
-
-app.add_exception_handler(
-    RequestValidationError,
-    validation_exception_handler,
-)

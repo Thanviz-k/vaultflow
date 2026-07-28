@@ -34,20 +34,12 @@ function Sidebar() {
     <aside className="sidebar">
 
       <div className="sidebar-logo">
-
-  <div className="logo-icon">
-    🔐
-  </div>
-
-  <div>
-
-    <h2>VaultFlow</h2>
-
-    <p>Secure Vault</p>
-
-  </div>
-
-</div>
+        <div className="logo-icon">🔐</div>
+        <div className="logo-content">
+          <span className="logo-title">VaultFlow</span>
+          <span className="logo-subtitle">Secure Vault</span>
+        </div>
+      </div>
 
       {
 

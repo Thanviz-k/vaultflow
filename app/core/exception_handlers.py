@@ -4,6 +4,30 @@ from fastapi.exceptions import RequestValidationError
 from app.core.exceptions import VaultFlowException
 
 
+def _safe_errors(exc: RequestValidationError):
+    """
+    Pydantic v2 puts the raw exception object (e.g. a ValueError raised
+    inside a @field_validator) into each error's 'ctx' dict. That object
+    isn't JSON-serializable, so we stringify it before returning.
+    """
+
+    safe = []
+
+    for err in exc.errors():
+        err = dict(err)
+
+        ctx = err.get("ctx")
+        if isinstance(ctx, dict):
+            err["ctx"] = {
+                key: (str(value) if isinstance(value, BaseException) else value)
+                for key, value in ctx.items()
+            }
+
+        safe.append(err)
+
+    return safe
+
+
 async def vaultflow_exception_handler(
     request: Request,
     exc: VaultFlowException,
@@ -27,7 +51,7 @@ async def request_validation_exception_handler(
         content={
             "success": False,
             "error": "Validation failed",
-            "details": exc.errors(),
+            "details": _safe_errors(exc),
         },
     )
 
@@ -54,6 +78,6 @@ async def validation_exception_handler(
         status_code=422,
         content={
             "error": "Validation Error",
-            "details": exc.errors(),
+            "details": _safe_errors(exc),
         },
     )

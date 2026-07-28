@@ -9,7 +9,7 @@ function PasswordChecklist({ value = "" }) {
 
     {
       ok: checks.length,
-      text: "Minimum 12 characters",
+      text: "Minimum 8 characters",
     },
 
     {

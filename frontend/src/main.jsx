@@ -4,10 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import "./styles/variables.css";
 import "./styles/layout.css";
-import "./styles/dashboard.css";
 import "./styles/components.css";
+import "./styles/dashboard.css";
 import "./styles/animations.css";
-
 
 import App from "./App";
 

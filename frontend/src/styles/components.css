@@ -1416,6 +1416,103 @@ width:100%;
 
 }
 /* ===========================
+   RADIO OPTION (vault key choice)
+=========================== */
+
+.radio-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    border:2px solid var(--border-color);
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:.92rem;
+    transition:.2s;
+}
+
+.radio-option:hover{
+    background:#FFFBEA;
+}
+
+.radio-option input{
+    width:auto;
+}
+
+
+/* ===========================
+   EXPORT BUTTON
+=========================== */
+
+.btn-export{
+    background:#fff;
+    color:var(--text-primary);
+}
+
+.btn-export:hover{
+    background:#F5F3FF;
+}
+
+
+/* ===========================
+   PASSWORD STRENGTH
+=========================== */
+
+.strength-meter{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:-6px;
+}
+
+.strength-header{
+    display:flex;
+    justify-content:space-between;
+    font-size:.85rem;
+    font-weight:600;
+}
+
+.progress-bar{
+    width:100%;
+    height:10px;
+    background:var(--gray-200);
+    border:2px solid var(--border-color);
+    border-radius:999px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    height:100%;
+    border-radius:999px;
+    transition:width .25s ease, background .25s ease;
+}
+
+
+/* ===========================
+   PASSWORD CHECKLIST
+=========================== */
+
+.password-checklist{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:14px 16px;
+    background:var(--surface-alt);
+    border:2px solid var(--border-color);
+    border-radius:14px;
+}
+
+.check-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:.85rem;
+    color:var(--text-muted);
+}
+
+
+/* ===========================
    AUTH PAGE
 =========================== */
 
@@ -1426,6 +1523,7 @@ width:100%;
     justify-content:center;
     padding:40px;
     background:var(--bg);
+    overflow-y:auto;
 }
 
 .auth-card{
