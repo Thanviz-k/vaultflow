@@ -27,6 +27,10 @@ class Notification(Base):
     created_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
-    related_secret_id = Column(UUID(as_uuid=True), ForeignKey("secrets.id"), nullable=True)
+    related_secret_id = Column(
+    UUID(as_uuid=True),
+    ForeignKey("secrets.id", ondelete="SET NULL"),
+    nullable=True,
+)
 
     owner = relationship("Owner", back_populates="notifications")
