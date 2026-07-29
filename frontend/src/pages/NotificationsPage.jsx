@@ -35,7 +35,12 @@ function NotificationsPage({ token, onLogout }) {
       headers: { Authorization: `Bearer ${token}` },
     }).then(() => loadNotifications());
   }
-
+  function clearAll() {
+  fetch("http://127.0.0.1:8000/notifications/clear-all", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  }).then(() => loadNotifications());
+}
   return (
     <AppLayout title="Notifications" onLogout={onLogout} token={token}>
       <div style={{ maxWidth: "700px", margin: "0 auto" }}>
@@ -43,6 +48,9 @@ function NotificationsPage({ token, onLogout }) {
           <h2 style={{ margin: 0 }}>Notifications</h2>
           <button className="mark-all-btn" onClick={markAllRead}>
             Mark all as read
+          </button>
+          <button className="mark-all-btn" onClick={clearAll}>
+            Clear all
           </button>
         </div>
 

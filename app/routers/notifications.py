@@ -66,3 +66,32 @@ def mark_all_read(
     ).update({"is_read": True})
     db.commit()
     return {"success": True}
+@router.delete("/clear-all")
+def clear_all_notifications(
+    db: Session = Depends(get_db),
+    current_owner: Owner = Depends(get_current_owner),
+):
+    deleted = (
+        db.query(Notification)
+        .filter(Notification.owner_id == current_owner.id)
+        .delete()
+    )
+    db.commit()
+    return {"success": True, "deleted": deleted}
+
+
+@router.delete("/clear-read")
+def clear_read_notifications(
+    db: Session = Depends(get_db),
+    current_owner: Owner = Depends(get_current_owner),
+):
+    deleted = (
+        db.query(Notification)
+        .filter(
+            Notification.owner_id == current_owner.id,
+            Notification.is_read == True,
+        )
+        .delete()
+    )
+    db.commit()
+    return {"success": True, "deleted": deleted}
