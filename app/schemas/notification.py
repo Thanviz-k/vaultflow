@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -13,8 +13,7 @@ class NotificationOut(BaseModel):
     created_at: datetime
     related_secret_id: Optional[UUID] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NotificationSummary(BaseModel):
