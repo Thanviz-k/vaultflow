@@ -14,7 +14,7 @@ from app.routers import (
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import SessionLocal
-from app.services.decay_service import expire_overdue_secrets
+from app.services.decay_service import expire_overdue_secrets, notify_expiring_secrets
 from app.core.exceptions import VaultFlowException
 from app.core.exception_handlers import (
     validation_exception_handler,
@@ -49,6 +49,8 @@ async def run_decay_loop():
                 "Decay worker expired %s secret(s)",
                 count,
             )
+            notified = notify_expiring_secrets(db)
+            logger.info("Decay worker notified %s expiring secret(s)", notified)
 
         except Exception:
             # Rollback if an error occurs
