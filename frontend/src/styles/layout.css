@@ -781,6 +781,7 @@ ol{
 
 .navbar{
     height: 68px;
+    border-radius: 16px;
     padding: 0 22px;
     margin-bottom: 22px;
 }
