@@ -15,12 +15,18 @@ function Navbar({ title, onLogout, token }) {
   useEffect(() => {
     if (!token) return;
 
-    fetch("http://127.0.0.1:8000/notifications/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setUnreadCount(data.unread_count))
-      .catch(() => {});
+    function loadUnreadCount() {
+      fetch("http://127.0.0.1:8000/notifications/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setUnreadCount(data.unread_count))
+        .catch(() => {});
+    }
+
+    loadUnreadCount();
+    const interval = setInterval(loadUnreadCount, 15000);
+    return () => clearInterval(interval);
   }, [token]);
 
   return (

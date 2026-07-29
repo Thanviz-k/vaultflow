@@ -1,6 +1,6 @@
 {
-  "dependencies": {
-    "lucide-react": "^1.27.0",
-    "react-hot-toast": "^2.6.0"
+  "name": "vaultflow-dev",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \". venv/bin/activate && uvicorn app.main:app --reload\" \"cd frontend && npm run dev\""
   }
 }
