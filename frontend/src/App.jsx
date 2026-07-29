@@ -142,17 +142,7 @@ function App() {
         }
       />
 
-      {/* UNKNOWN ROUTES */}
-
-      <Route
-        path="*"
-        element={
-          <Navigate
-            to={token ? "/dashboard" : "/"}
-            replace
-          />
-        }
-      />
+    
 
     </Routes>
 

@@ -22,15 +22,7 @@ function Navbar({ title, onLogout }) {
 
       <div className="navbar-actions">
 
-        <button
-          className="btn btn-icon"
-          title="AI Assistant"
-          onClick={() => navigate("/ai-assistant")}
-        >
-
-          <Sparkles size={20} />
-
-        </button>
+        
 
         <button className="btn btn-icon">
 
@@ -48,6 +40,14 @@ function Navbar({ title, onLogout }) {
 
         </button>
 
+
+        <button
+            className="btn btn-icon"
+            title="AI Assistant"
+            onClick={() => navigate("/ai")}
+          >
+            <Sparkles size={20} />
+          </button>
         <button
           className="logout-btn"
           onClick={onLogout}
