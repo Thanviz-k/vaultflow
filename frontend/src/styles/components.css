@@ -1762,19 +1762,28 @@ width:100%;
 
 /* Notification cards */
 .notif-card {
+  position: relative;
   border: 1.5px solid #1A1A2E;
   border-radius: 14px;
-  padding: 16px 18px;
+  padding: 16px 18px 16px 26px;
   margin-bottom: 12px;
   transition: background 0.15s ease;
 }
 .notif-card.unread {
   background: #FFF9E0;
-  border-left: 4px solid #F5B700;
 }
 .notif-card.read {
   background: #fff;
-  border-left: 4px solid transparent;
+}
+.notif-card.unread::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F5B700;
 }
 .notif-title {
   font-weight: 700;
