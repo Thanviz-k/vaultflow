@@ -12,6 +12,7 @@ import SecretsPage from "./pages/SecretsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AIAssistantPage from "./pages/AIAssistantPage";
 import ProfilePage from "./pages/ProfilePage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 function App() {
 
@@ -102,6 +103,24 @@ function App() {
         }
       />
 
+      {/* NOTIFICATION */}
+
+      <Route
+        path="/notifications"
+        element={
+          token ? (
+            <NotificationsPage
+              token={token}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate
+              to="/"
+              replace
+            />
+          )
+        }
+      />
       
 
       {/* PROFILE */}

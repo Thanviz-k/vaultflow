@@ -240,7 +240,7 @@ LOGOUT
 SEARCH BAR
 ==========================================================*/
 
-    box-shadow:var(--shadow-md);
+    box-shadow:var(--shadow-md)
 /*==========================================================
 INPUTS
 ==========================================================*/
@@ -1653,4 +1653,177 @@ width:100%;
 
 .modal-footer{
     padding: 12px 22px;
+}
+
+.notification-btn {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+/* Icon buttons - subtle color per action */
+.btn-icon {
+  background: #fff;
+  border: 1.5px solid #1A1A2E;
+  border-radius: 12px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-1px);
+}
+
+.btn-icon[title="AI Assistant"] {
+  color: #7C3AED;
+}
+.btn-icon[title="AI Assistant"]:hover {
+  background: #F3EBFF;
+  border-color: #7C3AED;
+}
+
+.notification-btn {
+  position: relative;
+  color: #D97706;
+}
+.notification-btn:hover {
+  background: #FFF3D6;
+  border-color: #D97706;
+}
+
+.btn-icon[title="Profile"] {
+  color: #2563EB;
+}
+.btn-icon[title="Profile"]:hover {
+  background: #E8F0FE;
+  border-color: #2563EB;
+}
+
+.logout-btn {
+  border: 1.5px solid #1A1A2E;
+  border-radius: 12px;
+  background: #fff;
+  transition: background 0.15s ease;
+}
+.logout-btn:hover {
+  background: #FFE3E3;
+  border-color: #DC2626;
+  color: #DC2626;
+}
+
+/* Notification badge - slightly refined */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  background: #DC2626;
+  border: 2px solid #fff;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+/* Mark all as read - make it an actual button */
+.mark-all-btn {
+  border: 1.5px solid #1A1A2E;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A2E;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.mark-all-btn:hover {
+  background: #FFF3B8;
+}
+
+/* Notification cards */
+.notif-card {
+  border: 1.5px solid #1A1A2E;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  transition: background 0.15s ease;
+}
+.notif-card.unread {
+  background: #FFF9E0;
+  border-left: 4px solid #F5B700;
+}
+.notif-card.read {
+  background: #fff;
+  border-left: 4px solid transparent;
+}
+.notif-title {
+  font-weight: 700;
+  color: #1A1A2E;
+}
+.notif-time {
+  font-size: 12px;
+  color: #9A9A9A;
+}
+.notif-message {
+  margin: 6px 0 0;
+  color: #4A4A4A;
+}
+
+/* Filled icon buttons */
+.btn-icon[title="AI Assistant"] {
+  background: #F3EBFF;
+  border: 1.5px solid #7C3AED;
+  color: #7C3AED;
+}
+.btn-icon[title="AI Assistant"]:hover {
+  background: #E4D4FF;
+}
+
+.notification-btn {
+  position: relative;
+  background: #FFF3D6;
+  border: 1.5px solid #D97706;
+  color: #D97706;
+}
+.notification-btn:hover {
+  background: #FFE7B0;
+}
+
+.btn-icon[title="Profile"] {
+  background: #E8F0FE;
+  border: 1.5px solid #2563EB;
+  color: #2563EB;
+}
+.btn-icon[title="Profile"]:hover {
+  background: #D2E3FC;
+}
+
+.logout-btn {
+  background: #FFE3E3;
+  border: 1.5px solid #DC2626;
+  color: #DC2626;
+  border-radius: 12px;
+}
+.logout-btn:hover {
+  background: #FFCACA;
 }

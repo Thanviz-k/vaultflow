@@ -22,6 +22,10 @@ from app.core.exceptions import (
     ResourceNotFoundError,
     VaultError,
 )
+
+from app.models.notification import Notification, NotificationType
+
+
 def verify_owner_vault_key(
     db: Session,
     owner_id,
@@ -117,6 +121,15 @@ def create_secret(
             name,
             owner.email,
         )
+
+    db.add(Notification(
+        owner_id=owner_id,
+        type=NotificationType.SECRET_CREATED,
+        title="Secret created",
+        message=f"'{name}' was created.",
+        related_secret_id=new_secret.id,
+    ))
+    db.commit()
 
     return new_secret
 
@@ -222,13 +235,20 @@ def revoke_secret(
         secret.nonce = None
         secret.revoked_at = datetime.now(timezone.utc)
 
+        db.add(Notification(
+            owner_id=owner_id,
+            type=NotificationType.SECRET_REVOKED,
+            title="Secret revoked",
+            message=f"'{secret.name}' was revoked.",
+            related_secret_id=secret.id,
+        ))
+
         log_action(
             db,
             secret_id=secret.id,
             secret_name=secret.name,
             action="revoked",
         )
-
         db.commit()
         db.refresh(secret)
 
@@ -380,3 +400,4 @@ def search_secrets(
         )
         .all()
     )
+

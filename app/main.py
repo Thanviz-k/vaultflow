@@ -9,6 +9,7 @@ from app.routers import (
     vault,
     secrets,
     audit,
+    notifications,
 )
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -99,6 +100,7 @@ app.include_router(vault.router)
 app.include_router(secrets.router)
 app.include_router(users.router)
 app.include_router(audit.router)
+app.include_router(notifications.router)
 app.add_exception_handler(
     VaultFlowException,
     vaultflow_exception_handler,

@@ -70,3 +70,7 @@ class Owner(Base):
         "Secret",
         back_populates="owner",
     )
+    notifications = relationship(
+        "Notification", 
+	back_populates="owner", 
+	cascade="all, delete-orphan")

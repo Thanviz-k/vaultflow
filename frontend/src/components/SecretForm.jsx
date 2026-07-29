@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";import { X } from "lucide-react";
 import { createSecret } from "../api";
 
 function SecretForm({ token, onSuccess, onCancel }) {
@@ -7,7 +6,12 @@ function SecretForm({ token, onSuccess, onCancel }) {
   const [value, setValue] = useState("");
   const [expiresInDays, setExpiresInDays] = useState("30");
   const [error, setError] = useState("");
-
+useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
   const [showVaultKeyPrompt, setShowVaultKeyPrompt] = useState(false);
 
   function handleSubmit(e) {

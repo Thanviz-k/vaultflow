@@ -103,7 +103,7 @@ function DashboardPage({ token, onLogout }) {
         />
       )}
 
-      <AppLayout title="Dashboard" onLogout={onLogout}>
+      <AppLayout title="Dashboard" onLogout={onLogout} token={token}>
         <div className="dashboard-page">
           <div className="dashboard-hero">
             <div>

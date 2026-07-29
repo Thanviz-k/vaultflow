@@ -1,22 +1,25 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from database import get_db
-from models import Notification
-from schemas import NotificationOut, NotificationSummary
-from auth import get_current_user
 
-router = APIRouter(prefix="/notifications", tags=["notifications"])
+from app.core.database import get_db
+from app.models.notification import Notification
+from app.models.owner import Owner
+from app.schemas.notification import NotificationOut, NotificationSummary
+from app.dependencies.auth import get_current_owner
+
+router = APIRouter(prefix="/notifications", tags=["Notifications"])
+
 
 @router.get("/", response_model=NotificationSummary)
 def get_notifications(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
+    current_owner: Owner = Depends(get_current_owner),
     limit: int = 20,
 ):
     notifications = (
         db.query(Notification)
-        .filter(Notification.user_id == current_user.id)
+        .filter(Notification.owner_id == current_owner.id)
         .order_by(Notification.created_at.desc())
         .limit(limit)
         .all()
@@ -24,24 +27,25 @@ def get_notifications(
     unread_count = (
         db.query(func.count(Notification.id))
         .filter(
-            Notification.user_id == current_user.id,
+            Notification.owner_id == current_owner.id,
             Notification.is_read == False,
         )
         .scalar()
     )
     return {"unread_count": unread_count, "notifications": notifications}
 
+
 @router.patch("/{notification_id}/read")
 def mark_as_read(
-    notification_id: int,
+    notification_id: str,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
+    current_owner: Owner = Depends(get_current_owner),
 ):
     notif = (
         db.query(Notification)
         .filter(
             Notification.id == notification_id,
-            Notification.user_id == current_user.id,
+            Notification.owner_id == current_owner.id,
         )
         .first()
     )
@@ -50,13 +54,14 @@ def mark_as_read(
         db.commit()
     return {"success": True}
 
+
 @router.patch("/read-all")
 def mark_all_read(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user),
+    current_owner: Owner = Depends(get_current_owner),
 ):
     db.query(Notification).filter(
-        Notification.user_id == current_user.id,
+        Notification.owner_id == current_owner.id,
         Notification.is_read == False,
     ).update({"is_read": True})
     db.commit()

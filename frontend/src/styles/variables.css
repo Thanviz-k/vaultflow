@@ -643,3 +643,7 @@ translateY(-5px);
 
 --background-color: var(--bg);
 }
+
+html {
+  scrollbar-gutter: stable;
+}
