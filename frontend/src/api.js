@@ -7,6 +7,8 @@ async function parseResponse(response) {
     throw new Error(
       typeof data.detail === "string"
         ? data.detail
+        : typeof data.error === "string"
+        ? data.error
         : "Something went wrong"
     );
   }
@@ -298,6 +300,25 @@ export async function getVaultStatus(token) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+
+  return parseResponse(response);
+}
+
+// ROTATE VAULT KEY (change key WITHOUT deleting secrets — re-encrypts them)
+
+export async function rotateVaultKey(currentVaultKey, mode, newVaultKey, token) {
+  const response = await fetch(`${BASE_URL}/vault/rotate-key`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      mode,
+      current_vault_key: currentVaultKey,
+      new_vault_key: newVaultKey,
+    }),
   });
 
   return parseResponse(response);

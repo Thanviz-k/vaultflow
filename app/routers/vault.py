@@ -8,11 +8,14 @@ from app.schemas.vault import (
     VaultInitializeRequest,
     VaultInitializeResponse,
     VaultResetRequest,
+    VaultRotateKeyRequest,
+    VaultRotateKeyResponse,
     VaultStatusResponse,
 )
 from app.services.vault_service import (
     initialize_owner_vault,
     reset_owner_vault,
+    rotate_owner_vault_key,
     get_vault_status,
 )
 from app.services.secret_service import verify_owner_vault_key
@@ -87,6 +90,59 @@ def initialize_vault(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+@router.post(
+    "/rotate-key",
+    summary="Change Vault Key (keeps secrets)",
+    description=(
+        "Verify the current Vault Key, then re-encrypt every existing "
+        "secret under a new Vault Key. Unlike /vault/reset, this does "
+        "NOT delete any secrets. All-or-nothing: if any secret fails "
+        "to re-encrypt, no changes are saved."
+    ),
+    response_model=VaultRotateKeyResponse,
+)
+def rotate_vault_key(
+    payload: VaultRotateKeyRequest,
+    db: Session = Depends(get_db),
+    owner: Owner = Depends(get_current_owner),
+):
+    if payload.mode == "generated":
+        from app.services.key_service import generate_vault_key
+
+        new_vault_key = generate_vault_key()
+
+    elif payload.mode == "custom":
+        if not payload.new_vault_key:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New vault key is required for custom mode.",
+            )
+        if len(payload.new_vault_key.strip()) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New vault key must be at least 8 characters.",
+            )
+        new_vault_key = payload.new_vault_key.strip()
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid mode.",
+        )
+
+    rotate_owner_vault_key(
+        db=db,
+        owner=owner,
+        current_vault_key=payload.current_vault_key,
+        new_vault_key=new_vault_key,
+    )
+
+    return VaultRotateKeyResponse(
+        generated_vault_key=new_vault_key if payload.mode == "generated" else None,
+        message="Vault Key changed successfully. All secrets remain intact.",
+    )
+
 
 @router.post(
     "/reset",

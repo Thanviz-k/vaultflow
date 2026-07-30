@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   KeyRound,
-  AlertTriangle,
   HelpCircle,
   X,
 } from "lucide-react";
@@ -16,7 +15,7 @@ import VaultSetupModal from "../components/vault/VaultSetupModal";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Alert from "../components/ui/Alert";
 
-import { getMyProfile, resetVault, forceResetVault } from "../api";
+import { getMyProfile, rotateVaultKey, forceResetVault } from "../api";
 import { formatDate } from "../utils/formatDate";
 
 function ProfilePage({ token, onLogout }) {
@@ -129,13 +128,13 @@ function ProfilePage({ token, onLogout }) {
             recovered on your behalf.
           </p>
 
-          <div className="alert alert-warning" style={{ marginTop: 16 }}>
-            <span>⚠️</span>
+          <div className="alert alert-info" style={{ marginTop: 16 }}>
+            <span>🔐</span>
             <span>
-              Changing your Vault Key requires wiping your current vault.
-              <strong> All existing secrets will be permanently deleted and
-              cannot be recovered</strong> — there is no way to re-encrypt
-              them with a new key without the old one.
+              Changing your Vault Key re-encrypts all of your existing
+              secrets under the new key.
+              <strong> Your secrets are kept — nothing is deleted</strong> as
+              long as you know your current Vault Key.
             </span>
           </div>
 
@@ -184,7 +183,7 @@ function ProfilePage({ token, onLogout }) {
           onClose={() => setShowChangeKey(false)}
           onConfirmed={() => {
             setShowChangeKey(false);
-            setShowVaultSetup(true);
+            loadProfile();
           }}
         />
       )}
@@ -210,28 +209,83 @@ function ProfilePage({ token, onLogout }) {
   );
 }
 
-// Used when the owner KNOWS their current Vault Key and wants to rotate it.
-// Requires the current key as proof before wiping.
+// Used when the owner KNOWS their current Vault Key and wants to change it.
+// This re-encrypts every secret under the new key — nothing is deleted.
+// If the new key is auto-generated, we force a "confirm you saved it" step
+// before closing, same pattern as initial vault setup.
 function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
-  const [vaultKey, setVaultKey] = useState("");
-  const [confirmText, setConfirmText] = useState("");
+  const [currentVaultKey, setCurrentVaultKey] = useState("");
+  const [mode, setMode] = useState("generated");
+  const [newVaultKey, setNewVaultKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [revealedKey, setRevealedKey] = useState(null);
+  const [savedConfirmed, setSavedConfirmed] = useState(false);
 
-  const CONFIRM_PHRASE = "DELETE MY SECRETS";
   const canSubmit =
-    vaultKey.trim().length > 0 && confirmText === CONFIRM_PHRASE;
+    currentVaultKey.trim().length > 0 &&
+    (mode === "generated" || newVaultKey.trim().length >= 8);
+
+  async function downloadAndCopyKey(key) {
+    const fileContent = `====================================
+VaultFlow Vault Key
+====================================
+
+Vault Key:
+${key}
+
+IMPORTANT:
+- Keep this key safe.
+- VaultFlow cannot recover it if lost.
+====================================
+`;
+    const blob = new Blob([fileContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "vaultflow-vault-key.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopied(true);
+    } catch {
+      // ignore — the key is still shown/typed by the user as a fallback
+    }
+  }
 
   async function handleConfirm(e) {
     e.preventDefault();
-
     if (!canSubmit) return;
 
     setLoading(true);
     setError("");
 
     try {
-      await resetVault(vaultKey, token);
+      const data = await rotateVaultKey(
+        currentVaultKey,
+        mode,
+        mode === "custom" ? newVaultKey.trim() : null,
+        token
+      );
+
+      if (mode === "generated" && data.generated_vault_key) {
+        await downloadAndCopyKey(data.generated_vault_key);
+        // Force confirmation before closing, same as initial vault setup
+        setRevealedKey(data.generated_vault_key);
+        setLoading(false);
+        return;
+      }
+
+      // Custom key: auto-download it too, then we're done
+      if (mode === "custom") {
+        await downloadAndCopyKey(newVaultKey.trim());
+      }
+
       onConfirmed();
     } catch (err) {
       setError(err.message);
@@ -240,16 +294,96 @@ function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
     }
   }
 
+  async function handleCopyAgain() {
+    try {
+      await navigator.clipboard.writeText(revealedKey);
+      setCopied(true);
+    } catch {
+      // clipboard blocked — the key is still visible on screen
+    }
+  }
+
+  // --- Step 2: generated key shown, force confirmation before closing ---
+  if (revealedKey) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal">
+          <div className="modal-header">
+            <div>
+              <h2>
+                <KeyRound size={22} style={{ marginRight: 8, verticalAlign: "middle" }} />
+                Save Your New Vault Key
+              </h2>
+              <p>Your secrets have already been re-encrypted with this key.</p>
+            </div>
+          </div>
+
+          <div className="modal-body">
+            <div className="alert alert-danger">
+              <span>⚠️</span>
+              <span>
+                There is no way to recover your secrets if you lose this
+                Vault Key. VaultFlow never stores it.
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label>Your New Vault Key</label>
+              <input
+                type="text"
+                className="input"
+                value={revealedKey}
+                readOnly
+                onFocus={(e) => e.target.select()}
+              />
+            </div>
+
+            <button type="button" className="btn btn-secondary" onClick={handleCopyAgain}>
+              Copy Vault Key
+            </button>
+
+            {copied && (
+              <p className="alert alert-success">
+                Vault Key copied to clipboard and downloaded as
+                vaultflow-vault-key.txt.
+              </p>
+            )}
+
+            <label className="checkbox-option" style={{ marginTop: 16 }}>
+              <input
+                type="checkbox"
+                checked={savedConfirmed}
+                onChange={(e) => setSavedConfirmed(e.target.checked)}
+              />
+              I've saved my new Vault Key somewhere safe.
+            </label>
+          </div>
+
+          <div className="modal-footer">
+            <button
+              className="btn btn-primary"
+              disabled={!savedConfirmed}
+              onClick={onConfirmed}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Step 1: enter current key, choose how the new key is created ---
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
           <div>
             <h2>
-              <AlertTriangle size={22} style={{ marginRight: 8, verticalAlign: "middle" }} />
+              <KeyRound size={22} style={{ marginRight: 8, verticalAlign: "middle" }} />
               Change Vault Key
             </h2>
-            <p>This will permanently delete all of your current secrets.</p>
+            <p>Your secrets will be re-encrypted with the new key. Nothing is deleted.</p>
           </div>
           <button type="button" className="icon-btn" onClick={onClose}>
             <X size={20} />
@@ -258,41 +392,47 @@ function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
 
         <form onSubmit={handleConfirm}>
           <div className="modal-body">
-            <div className="alert alert-danger">
-              <span>❌</span>
-              <span>
-                This action cannot be undone. Every secret in your vault will
-                be permanently and irreversibly deleted the moment you
-                confirm.
-              </span>
-            </div>
-
             <div className="form-group">
               <label>Current Vault Key</label>
               <input
                 type="password"
                 className="input"
-                value={vaultKey}
-                onChange={(e) => setVaultKey(e.target.value)}
+                value={currentVaultKey}
+                onChange={(e) => setCurrentVaultKey(e.target.value)}
                 placeholder="Enter your current Vault Key"
                 autoComplete="off"
+                autoFocus
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label>
-                Type <strong>{CONFIRM_PHRASE}</strong> to confirm
-              </label>
+            <label className="radio-option">
               <input
-                className="input"
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder={CONFIRM_PHRASE}
-                autoComplete="off"
-                required
+                type="radio"
+                checked={mode === "generated"}
+                onChange={() => setMode("generated")}
               />
-            </div>
+              Generate Secure New Vault Key ⭐ Recommended
+            </label>
+
+            <label className="radio-option">
+              <input
+                type="radio"
+                checked={mode === "custom"}
+                onChange={() => setMode("custom")}
+              />
+              Use My Own New Vault Key
+            </label>
+
+            {mode === "custom" && (
+              <input
+                type="password"
+                className="input"
+                placeholder="Enter your new Vault Key (min 8 characters)"
+                value={newVaultKey}
+                onChange={(e) => setNewVaultKey(e.target.value)}
+              />
+            )}
 
             {error && <p className="alert alert-danger">{error}</p>}
           </div>
@@ -304,10 +444,10 @@ function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
 
             <button
               type="submit"
-              className="btn btn-danger"
+              className="btn btn-primary"
               disabled={!canSubmit || loading}
             >
-              {loading ? "Deleting Secrets..." : "Delete Secrets & Continue"}
+              {loading ? "Changing Vault Key..." : "Change Vault Key"}
             </button>
           </div>
         </form>
@@ -318,8 +458,11 @@ function ChangeVaultKeyModal({ token, onClose, onConfirmed }) {
 
 // Used when the owner does NOT remember their current Vault Key.
 // There is no field to enter it — verification against a key you don't
-// remember is impossible. The only safe action is a full wipe, gated by
-// the owner's authenticated session (JWT) plus a typed confirm phrase.
+// remember is impossible, and without the old key there is no way to
+// re-encrypt existing secrets, cryptographically. The only safe action is
+// a full DELETE, gated by the owner's authenticated session (JWT) plus a
+// typed confirm phrase. This is the one place secrets genuinely can't be
+// preserved — hence the "reset" / "delete" language stays here.
 function ForgotVaultKeyModal({ token, onClose, onConfirmed }) {
   const [confirmText, setConfirmText] = useState("");
   const [loading, setLoading] = useState(false);

@@ -16,5 +16,16 @@ class VaultResetRequest(BaseModel):
     vault_key: str
 
 
+class VaultRotateKeyRequest(BaseModel):
+    mode: Literal["generated", "custom"]
+    current_vault_key: str
+    new_vault_key: str | None = None
+
+
+class VaultRotateKeyResponse(BaseModel):
+    generated_vault_key: str | None = None
+    message: str
+
+
 class VaultStatusResponse(BaseModel):
     initialized: bool
