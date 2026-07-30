@@ -8,6 +8,42 @@ export default function VaultSetupModal({ token, onInitialized }) {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
+  // Shared helper: downloads the vault key as a .txt file and best-effort
+  // copies it to the clipboard. Used for BOTH generated and custom keys.
+  const downloadAndCopyKey = async (key) => {
+    const fileContent = `====================================
+VaultFlow Vault Key
+====================================
+
+Vault Key:
+${key}
+
+IMPORTANT:
+- Keep this key safe.
+- VaultFlow cannot recover it if lost.
+====================================
+`;
+
+    const blob = new Blob([fileContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "vaultflow-vault-key.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Best-effort auto copy (some browsers block clipboard writes
+    // outside a direct user gesture, so this can silently no-op)
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopied(true);
+    } catch {
+      // ignore — copy button below still works
+    }
+  };
+
   const handleInitialize = async () => {
     setError("");
 
@@ -26,40 +62,14 @@ export default function VaultSetupModal({ token, onInitialized }) {
       );
 
       if (mode === "generated" && data.generated_vault_key) {
-        const generatedKey = data.generated_vault_key;
-
         // Auto download — happens immediately, no extra click needed
-        const fileContent = `====================================
-VaultFlow Vault Key
-====================================
+        await downloadAndCopyKey(data.generated_vault_key);
+      }
 
-Vault Key:
-${generatedKey}
-
-IMPORTANT:
-- Keep this key safe.
-- VaultFlow cannot recover it if lost.
-====================================
-`;
-
-        const blob = new Blob([fileContent], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "vaultflow-vault-key.txt";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Best-effort auto copy (some browsers block clipboard writes
-        // outside a direct user gesture, so this can silently no-op)
-        try {
-          await navigator.clipboard.writeText(generatedKey);
-          setCopied(true);
-        } catch {
-          // ignore — copy button below still works
-        }
+      if (mode === "custom" && vaultKey.trim()) {
+        // Auto download the user's own key too, so they always leave
+        // this screen with a saved copy regardless of which mode they picked
+        await downloadAndCopyKey(vaultKey.trim());
       }
 
       if (onInitialized) {

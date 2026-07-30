@@ -15,6 +15,40 @@ export default function VaultSetupModal({ token, onInitialized }) {
   const [revealedKey, setRevealedKey] = useState(null);
   const [savedConfirmed, setSavedConfirmed] = useState(false);
 
+  // Shared helper: downloads the vault key as a .txt file and best-effort
+  // copies it to the clipboard. Used for BOTH generated and custom keys.
+  const downloadAndCopyKey = async (key) => {
+    const fileContent = `====================================
+VaultFlow Vault Key
+====================================
+
+Vault Key:
+${key}
+
+IMPORTANT:
+- Keep this key safe.
+- VaultFlow cannot recover it if lost.
+====================================
+`;
+
+    const blob = new Blob([fileContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "vaultflow-vault-key.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopied(true);
+    } catch {
+      // ignore — the key is also shown on screen below as a fallback
+    }
+  };
+
   const handleInitialize = async () => {
     setError("");
 
@@ -40,35 +74,7 @@ export default function VaultSetupModal({ token, onInitialized }) {
       if (mode === "generated" && data.generated_vault_key) {
         const generatedKey = data.generated_vault_key;
 
-        const fileContent = `====================================
-VaultFlow Vault Key
-====================================
-
-Vault Key:
-${generatedKey}
-
-IMPORTANT:
-- Keep this key safe.
-- VaultFlow cannot recover it if lost.
-====================================
-`;
-
-        const blob = new Blob([fileContent], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "vaultflow-vault-key.txt";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        try {
-          await navigator.clipboard.writeText(generatedKey);
-          setCopied(true);
-        } catch {
-          // ignore — the key is also shown on screen below as a fallback
-        }
+        await downloadAndCopyKey(generatedKey);
 
         // Show the key on screen and stop here — don't call
         // onInitialized() until the user confirms they've saved it.
@@ -77,8 +83,13 @@ IMPORTANT:
         return;
       }
 
-      // Custom-key mode: the user already knows their key, so there's
-      // nothing to reveal/confirm — proceed immediately.
+      // Custom-key mode: the user chose their own key, but we still
+      // auto-download it (same as generated keys) so they always leave
+      // this screen with a saved backup file.
+      if (mode === "custom" && vaultKey.trim()) {
+        await downloadAndCopyKey(vaultKey.trim());
+      }
+
       if (onInitialized) {
         onInitialized();
       }

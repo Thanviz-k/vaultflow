@@ -12,6 +12,7 @@ VaultFlow is a secure secrets management application for creating, storing, moni
 - Automatic secret expiry
 - Secret revocation
 - Audit logging
+- In-app expiry notifications with clear-all / clear-read
 - Dashboard statistics, filters, and search
 - AI natural-language queries
 - AI activity summaries
@@ -63,7 +64,7 @@ PostgreSQL
 
 ## Database Model
 
-VaultFlow uses three main entities:
+VaultFlow uses four main entities:
 
 ### Owner
 
@@ -98,6 +99,10 @@ Records important secret lifecycle actions such as:
 - reveal_failed
 - revoked
 - expired
+
+### Notification
+
+Represents an in-app alert for the owner, such as an upcoming secret expiry, a completed revocation, or a system message. Includes a read/unread state and an optional link back to the related secret.
 
 ## Secret Creation Flow
 
@@ -159,7 +164,7 @@ ACTIVE
   +------ user revokes -------------> REVOKED
 ```
 
-A background decay worker periodically checks for overdue active secrets and marks them as expired.
+A background decay worker periodically checks for overdue active secrets, marks them as expired, and creates a notification for any secret expiring within 24 hours.
 
 ## AI Query System
 
@@ -213,8 +218,15 @@ The Reports page also supports AI queries and Markdown report generation.
 | POST | `/secrets/verify` | Verify secret key |
 | POST | `/secrets/reveal` | Reveal secret value |
 | POST | `/secrets/revoke` | Revoke secret |
+| POST | `/secrets/delete` | Permanently delete secret |
 | POST | `/secrets/query` | Run AI natural-language query |
 | GET | `/secrets/summary` | Generate activity summary |
+| GET | `/notifications/` | List notifications and unread count |
+| PATCH | `/notifications/{id}/read` | Mark one notification as read |
+| PATCH | `/notifications/read-all` | Mark all notifications as read |
+| DELETE | `/notifications/clear-all` | Delete all notifications |
+| DELETE | `/notifications/clear-read` | Delete read notifications only |
+| POST | `/vault/force-reset` | Reset vault without key verification (forgot vault key) |
 
 ## Project Structure
 
@@ -240,7 +252,21 @@ vaultflow/
 └── README.md
 ```
 
-## Run the Backend
+## Run the Backend and Frontend Together
+
+```bash
+cd vaultflow
+
+npm install --save-dev concurrently
+
+npm run dev
+```
+
+This runs `uvicorn app.main:app --reload` and `npm run dev` (Vite) together in one terminal, and stops both with a single Ctrl+C.
+
+## Run Individually
+
+Backend:
 
 ```bash
 cd vaultflow
@@ -252,9 +278,7 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-## Run the Frontend
-
-Open another terminal:
+Frontend (in another terminal):
 
 ```bash
 cd vaultflow/frontend
@@ -264,7 +288,21 @@ npm install
 npm run dev
 ```
 
-## Testing Flow
+## Testing
+
+Automated backend tests:
+
+```bash
+python -m pytest -v
+```
+
+With coverage:
+
+```bash
+python -m pytest --cov=app -v
+```
+
+Manual testing flow:
 
 1. Register a user.
 2. Log in.
@@ -279,6 +317,8 @@ npm run dev
 11. Test AI queries.
 12. Generate an activity summary.
 13. Test automatic expiry.
+14. Confirm a notification appears for a secret expiring within 24 hours.
+15. Delete a secret that has an associated notification and confirm it succeeds.
 
 ## Security Notes
 
@@ -300,11 +340,10 @@ VaultFlow is an educational and portfolio project. A production-grade secrets ma
 - Automatic secret rotation
 - Role-based access control
 - Fine-grained permissions
-- Expiry notifications
 - Usage analytics
 - Cloud KMS integration
-- Docker deployment
-- Automated backend and frontend tests
+- Docker deployment for backend and frontend
+- Automated frontend tests
 
 ## Summary
 
@@ -317,6 +356,8 @@ Encrypt and Store
     ↓
 Monitor Status
     ↓
+Notify on Expiry
+    ↓
 Query with AI
     ↓
 Verify Client Half
@@ -328,4 +369,4 @@ Revoke or Expire
 Record Audit Events
 ```
 
-VaultFlow demonstrates secure secret lifecycle management, owner isolation, encrypted storage, audit logging, and AI-assisted secret management.
+VaultFlow demonstrates secure secret lifecycle management, owner isolation, encrypted storage, audit logging, in-app notifications, and AI-assisted secret management.
